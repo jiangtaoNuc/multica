@@ -83,14 +83,38 @@ jobs:
           chmod 644 ~/.ssh/known_hosts
           exit $KGEN
 
-      - name: SSH probe
+      - name: Network reachability probe
         shell: bash
         run: |
-          set -e
-          ssh -v -o BatchMode=yes -o StrictHostKeyChecking=no -o IdentitiesOnly=yes \
+          set +e
+          echo "=== runner egress IP ==="
+          curl -sS --max-time 5 https://api.ipify.org || echo "(failed to fetch egress)"
+          echo ""
+          echo "=== TCP connect to $ECS_HOST:22 ==="
+          # nc -v -w timeout. -G is macOS-only; use -w on Ubuntu runner.
+          nc -vz -w 8 "$ECS_HOST" 22
+          NC_EXIT=$?
+          echo "nc exit: $NC_EXIT"
+          echo "=== bash /dev/tcp probe (verifies TCP handshake from bash) ==="
+          (echo > /dev/tcp/$ECS_HOST/22) 2>&1
+          echo "bash /dev/tcp exit: $?"
+          echo "=== curl telnet (read SSH banner) ==="
+          curl -sS --max-time 8 telnet://$ECS_HOST:22 < /dev/null 2>&1 | head -3
+          echo "curl exit: $?"
+          # do not exit non-zero here; let the SSH probe surface ssh -v output
+
+      - name: SSH probe (verbose)
+        shell: bash
+        run: |
+          # explicitly DO NOT set -e initially; we want full ssh -v even on failure
+          ssh -vvv -o BatchMode=yes -o StrictHostKeyChecking=no -o IdentitiesOnly=yes \
+            -o ConnectTimeout=15 \
             -i ~/.ssh/deploy_key \
             "$ECS_USER@$ECS_HOST" \
             'echo connected_as_$(whoami)_on_$(hostname)'
+          RC=$?
+          echo "ssh exit: $RC"
+          exit $RC
 
       - name: Run deploy
         shell: bash
