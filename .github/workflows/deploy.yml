@@ -51,6 +51,42 @@ jobs:
           echo "Deploying SHA: $SHA"
           echo "Reason: $REASON"
 
+      - name: Debug secrets (lengths only, no leaking)
+        shell: bash
+        run: |
+          {
+            echo "## Secret lengths"
+            echo ""
+            echo "| Secret | Length (chars) | First2 | Last2 |"
+            echo "| --- | --- | --- | --- |"
+            printf "| ECS_HOST | %s | %s | %s |\n" \
+              "$(printf %s "$ECS_HOST" | wc -c)" \
+              "$(printf %s "$ECS_HOST" | head -c 2)" \
+              "$(printf %s "$ECS_HOST" | tail -c 2)"
+            printf "| ECS_USER | %s | %s | %s |\n" \
+              "$(printf %s "$ECS_USER" | wc -c)" \
+              "$(printf %s "$ECS_USER" | head -c 2)" \
+              "$(printf %s "$ECS_USER" | tail -c 2)"
+            printf "| ECS_SSH_KEY_B64 | %s | %s | %s |\n" \
+              "$(printf %s "$ECS_SSH_KEY_B64" | wc -c)" \
+              "$(printf %s "$ECS_SSH_KEY_B64" | head -c 2)" \
+              "$(printf %s "$ECS_SSH_KEY_B64" | tail -c 2)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat "$GITHUB_STEP_SUMMARY"
+          # 关键：ECS_HOST 为空直接 fail，让 step 红，避免后面 SSH 误诊
+          if [ -z "$ECS_HOST" ]; then
+            echo "FATAL: ECS_HOST secret is empty or missing" >&2
+            exit 1
+          fi
+          if [ -z "$ECS_USER" ]; then
+            echo "FATAL: ECS_USER secret is empty or missing" >&2
+            exit 1
+          fi
+          if [ -z "$ECS_SSH_KEY_B64" ]; then
+            echo "FATAL: ECS_SSH_KEY_B64 secret is empty or missing" >&2
+            exit 1
+          fi
+
       - name: Checkout target SHA
         uses: actions/checkout@v4
         with:
