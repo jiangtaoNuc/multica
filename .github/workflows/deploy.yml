@@ -1,0 +1,63 @@
+name: Deploy to ECS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Git SHA to deploy (default: HEAD of main)'
+        required: false
+        default: ''
+
+concurrency:
+  group: deploy-ecs-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve target SHA
+        id: target
+        run: |
+          if [ -n "${{ github.event.inputs.sha }}" ]; then
+            SHA="${{ github.event.inputs.sha }}"
+          else
+            SHA="${{ github.sha }}"
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Deploying SHA: $SHA"
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.ECS_HOST }}
+          username: ${{ secrets.ECS_USER }}
+          port: ${{ secrets.ECS_PORT }}
+          key: ${{ secrets.ECS_SSH_KEY }}
+          command_timeout: 25m
+          script: |
+            set -e
+            bash /root/deploy/multica-deploy.sh ${{ steps.target.outputs.sha }}
+
+      - name: Verify health from GitHub runner
+        run: |
+          set -e
+          curl -fsS --max-time 10 http://${{ secrets.ECS_HOST }}:8080/healthz
+          echo ""
+          echo "backend ok"
+          curl -fsS --max-time 10 -o /dev/null -w "frontend: %{http_code}\n" http://${{ secrets.ECS_HOST }}:3000/
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Deploy summary" >> $GITHUB_STEP_SUMMARY
+          echo "- target sha: \`${{ steps.target.outputs.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- result: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- backend: http://${{ secrets.ECS_HOST }}:8080" >> $GITHUB_STEP_SUMMARY
+          echo "- frontend: http://${{ secrets.ECS_HOST }}:3000" >> $GITHUB_STEP_SUMMARY
