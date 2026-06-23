@@ -1,7 +1,13 @@
 # --- Build stage ---
 FROM golang:1.26-alpine AS builder
 
+# Alpine mirror for mainland China
+RUN sed -i 's#https\?://dl-cdn.alpinelinux.org/alpine#https://mirrors.aliyun.com/alpine#g' /etc/apk/repositories
 RUN apk add --no-cache git
+
+# Go proxy for mainland China
+ENV GOPROXY=https://goproxy.cn,direct
+ENV GOSUMDB=off
 
 WORKDIR /src
 
@@ -25,6 +31,7 @@ RUN cd server && CGO_ENABLED=0 go build -ldflags "-s -w" -o bin/backfill_codex_u
 # --- Runtime stage ---
 FROM alpine:3.21
 
+RUN sed -i 's#https\?://dl-cdn.alpinelinux.org/alpine#https://mirrors.aliyun.com/alpine#g' /etc/apk/repositories
 RUN apk add --no-cache ca-certificates tzdata
 
 WORKDIR /app
