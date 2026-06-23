@@ -40,21 +40,38 @@ jobs:
       - name: Setup SSH key (from base64 secret)
         shell: bash
         run: |
-          set -e
+          set +e
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
+          echo "--- secret presence ---"
           if [ -z "$ECS_SSH_KEY_B64" ]; then
             echo "ERROR: ECS_SSH_KEY_B64 secret is empty" >&2
             exit 1
           fi
-          echo "$ECS_SSH_KEY_B64" | base64 -d > ~/.ssh/deploy_key
+          echo "secret length (chars): $(printf %s "$ECS_SSH_KEY_B64" | wc -c)"
+          echo "secret first 20 chars: $(printf %s "$ECS_SSH_KEY_B64" | head -c 20)"
+          echo "secret last 20 chars:  $(printf %s "$ECS_SSH_KEY_B64" | tail -c 20)"
+          # Strip any whitespace/newlines defensively before decoding
+          echo "$ECS_SSH_KEY_B64" | tr -d '[:space:]' | base64 -d > ~/.ssh/deploy_key 2>/tmp/b64err
+          B64EXIT=$?
+          if [ $B64EXIT -ne 0 ]; then
+            echo "ERROR: base64 -d failed with exit $B64EXIT"
+            cat /tmp/b64err
+            exit $B64EXIT
+          fi
           chmod 600 ~/.ssh/deploy_key
+          echo "--- key file info ---"
           echo "byte count: $(wc -c < ~/.ssh/deploy_key)"
           echo "line count: $(wc -l < ~/.ssh/deploy_key)"
-          echo "fingerprint:"
+          echo "first line: $(head -1 ~/.ssh/deploy_key)"
+          echo "last line:  $(tail -1 ~/.ssh/deploy_key)"
+          echo "--- fingerprint test ---"
           ssh-keygen -l -f ~/.ssh/deploy_key
+          KGEN=$?
+          echo "ssh-keygen exit: $KGEN"
           ssh-keyscan -H "$ECS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
           chmod 644 ~/.ssh/known_hosts
+          exit $KGEN
 
       - name: SSH probe
         shell: bash
