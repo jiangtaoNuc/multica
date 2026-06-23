@@ -87,21 +87,34 @@ jobs:
         shell: bash
         run: |
           set +e
-          echo "=== runner egress IP ==="
-          curl -sS --max-time 5 https://api.ipify.org || echo "(failed to fetch egress)"
-          echo ""
-          echo "=== TCP connect to $ECS_HOST:22 ==="
-          # nc -v -w timeout. -G is macOS-only; use -w on Ubuntu runner.
-          nc -vz -w 8 "$ECS_HOST" 22
-          NC_EXIT=$?
-          echo "nc exit: $NC_EXIT"
-          echo "=== bash /dev/tcp probe (verifies TCP handshake from bash) ==="
-          (echo > /dev/tcp/$ECS_HOST/22) 2>&1
-          echo "bash /dev/tcp exit: $?"
-          echo "=== curl telnet (read SSH banner) ==="
-          curl -sS --max-time 8 telnet://$ECS_HOST:22 < /dev/null 2>&1 | head -3
-          echo "curl exit: $?"
-          # do not exit non-zero here; let the SSH probe surface ssh -v output
+          {
+            echo "## Network probe results"
+            echo ""
+            echo "### Runner egress IP"
+            echo '```'
+            curl -sS --max-time 5 https://api.ipify.org 2>&1 || echo "(failed)"
+            echo ""
+            echo '```'
+            echo ""
+            echo "### nc -vz $ECS_HOST 22"
+            echo '```'
+            nc -vz -w 8 "$ECS_HOST" 22 2>&1
+            echo "exit: $?"
+            echo '```'
+            echo ""
+            echo "### bash /dev/tcp/$ECS_HOST/22"
+            echo '```'
+            (timeout 8 bash -c "echo > /dev/tcp/$ECS_HOST/22") 2>&1
+            echo "exit: $?"
+            echo '```'
+            echo ""
+            echo "### curl telnet://$ECS_HOST:22 (SSH banner)"
+            echo '```'
+            curl -sS --max-time 8 "telnet://$ECS_HOST:22" < /dev/null 2>&1 | head -5
+            echo "exit: $?"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat "$GITHUB_STEP_SUMMARY"
 
       - name: SSH probe (verbose)
         shell: bash
