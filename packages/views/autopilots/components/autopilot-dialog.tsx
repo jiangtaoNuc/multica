@@ -54,7 +54,7 @@ import type {
   AutopilotExecutionMode,
   AutopilotTrigger,
 } from "@multica/core/types";
-import { TitleEditor, ContentEditor } from "../../editor";
+import { TitleEditor, ContentEditor, type ContentEditorRef } from "../../editor";
 import { ActorAvatar } from "../../common/actor-avatar";
 import { ProjectPicker } from "../../projects/components/project-picker";
 import { ProjectIcon } from "../../projects/components/project-icon";
@@ -357,6 +357,8 @@ export function AutopilotDialog(props: AutopilotDialogProps) {
     setAssigneeId(next.id);
   };
 
+  const descriptionEditorRef = useRef<ContentEditorRef>(null);
+
   const createAutopilot = useCreateAutopilot();
   const createTrigger = useCreateAutopilotTrigger();
   const updateAutopilot = useUpdateAutopilot();
@@ -375,11 +377,13 @@ export function AutopilotDialog(props: AutopilotDialogProps) {
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
+    const currentDescription =
+      descriptionEditorRef.current?.getMarkdown()?.trim() || description.trim();
     try {
       if (isCreate) {
         const autopilot = await createAutopilot.mutateAsync({
           title: title.trim(),
-          description: description.trim() || undefined,
+          description: currentDescription || undefined,
           project_id: executionMode === "create_issue" ? projectId : null,
           assignee_type: assigneeType,
           assignee_id: assigneeId,
@@ -432,7 +436,7 @@ export function AutopilotDialog(props: AutopilotDialogProps) {
         await updateAutopilot.mutateAsync({
           id: props.autopilotId,
           title: title.trim(),
-          description: description.trim() || null,
+          description: currentDescription || null,
           project_id: executionMode === "create_issue" ? projectId : null,
           assignee_type: assigneeType,
           assignee_id: assigneeId,
@@ -628,6 +632,7 @@ export function AutopilotDialog(props: AutopilotDialogProps) {
             <div className="flex-1 min-h-0 px-6 pb-6 flex flex-col lg:h-full">
               <div className="min-h-[200px] lg:min-h-0 lg:h-full overflow-y-auto rounded-lg border border-border bg-background transition-colors focus-within:border-input px-4 py-3">
                 <ContentEditor
+                  ref={descriptionEditorRef}
                   defaultValue={initial.description ?? ""}
                   placeholder={t(($) => $.dialog.description_placeholder)}
                   onUpdate={setDescription}
