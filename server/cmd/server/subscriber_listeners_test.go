@@ -393,6 +393,67 @@ func TestSubscriberIssueCreated_AutopilotMapPayload(t *testing.T) {
 	}
 }
 
+// TestSubscriberIssueCreated_IssueMentionNotSubscribed is a regression test for
+// the SQLSTATE 23514 check-constraint violations observed in production
+// (issue_subscriber_user_type_check). parseMentions yields 'issue', 'squad',
+// and 'all' in addition to 'member'/'agent', and addSubscriber used to forward
+// those types straight into AddIssueSubscriber. issue_subscriber.user_type is
+// constrained to ('member','agent'), so any description that linked to another
+// issue (or @all-mentioned everyone) caused a noisy CHECK error per write.
+// The fix drops non-(member|agent) types at the addSubscriber boundary; this
+// test pins that contract.
+func TestSubscriberIssueCreated_IssueMentionNotSubscribed(t *testing.T) {
+	queries := db.New(testPool)
+	bus := events.New()
+	registerSubscriberListeners(bus, queries)
+
+	otherIssueID := createTestIssue(t, testWorkspaceID, testUserID)
+	t.Cleanup(func() { cleanupTestIssue(t, otherIssueID) })
+
+	issueID := createTestIssue(t, testWorkspaceID, testUserID)
+	t.Cleanup(func() { cleanupTestIssue(t, issueID) })
+
+	description := "See [MUL-1](mention://issue/" + otherIssueID + ") and [@all](mention://all/all) for context."
+	bus.Publish(events.Event{
+		Type:        protocol.EventIssueCreated,
+		WorkspaceID: testWorkspaceID,
+		ActorType:   "member",
+		ActorID:     testUserID,
+		Payload: map[string]any{
+			"issue": handler.IssueResponse{
+				ID:          issueID,
+				WorkspaceID: testWorkspaceID,
+				Title:       "test issue with issue mention",
+				Status:      "todo",
+				Priority:    "medium",
+				CreatorType: "member",
+				CreatorID:   testUserID,
+				Description: &description,
+			},
+		},
+	})
+
+	if !isSubscribed(t, queries, issueID, "member", testUserID) {
+		t.Fatal("expected creator to be subscribed despite issue/all mentions in description")
+	}
+	if count := subscriberCount(t, queries, issueID); count != 1 {
+		t.Fatalf("expected only the creator subscribed (1), got %d — non-(member|agent) mention types must be filtered", count)
+	}
+
+	// Belt-and-suspenders: there must be no row with user_type='issue' or 'all'
+	// for this issue, regardless of which user_id was used.
+	var leaked int
+	if err := testPool.QueryRow(context.Background(),
+		`SELECT COUNT(*) FROM issue_subscriber WHERE issue_id = $1 AND user_type NOT IN ('member','agent')`,
+		issueID,
+	).Scan(&leaked); err != nil {
+		t.Fatalf("count leaked rows: %v", err)
+	}
+	if leaked != 0 {
+		t.Fatalf("expected 0 issue_subscriber rows with non-(member|agent) user_type, got %d", leaked)
+	}
+}
+
 // Verify parseUUID is consistent — the local helper should agree with util.MustParseUUID
 // for valid input, and panic on invalid input (the silent-zero behavior was removed
 // after #1661 to prevent silent SQL writes against a zero UUID).
