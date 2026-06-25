@@ -266,6 +266,17 @@ export class PreviewUnsupportedError extends Error {
   }
 }
 
+export class NetworkError extends Error {
+  readonly isNetworkError = true;
+  readonly cause: unknown;
+
+  constructor(cause: unknown) {
+    super("Network request failed — check your connection and try again");
+    this.name = "NetworkError";
+    this.cause = cause;
+  }
+}
+
 export class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
@@ -362,11 +373,17 @@ export class ApiClient {
 
     this.logger.info(`→ ${method} ${path}`, { rid });
 
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      ...init,
-      headers,
-      credentials: "include",
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${path}`, {
+        ...init,
+        headers,
+        credentials: "include",
+      });
+    } catch (err) {
+      this.logger.error(`✗ ${method} ${path}`, { rid, duration: `${Date.now() - start}ms`, error: String(err) });
+      throw new NetworkError(err);
+    }
 
     if (!res.ok) {
       if (res.status === 401) this.handleUnauthorized();
