@@ -1,11 +1,29 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiClient, ApiError } from "./client";
+import { ApiClient, ApiError, NetworkError } from "./client";
 
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
 describe("ApiClient", () => {
+  it("wraps network-level TypeError in NetworkError", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new TypeError("Failed to fetch")),
+    );
+
+    const client = new ApiClient("https://api.example.test");
+
+    try {
+      await client.listWorkspaces();
+      throw new Error("expected listWorkspaces to fail");
+    } catch (error) {
+      expect(error).toBeInstanceOf(NetworkError);
+      expect((error as NetworkError).isNetworkError).toBe(true);
+      expect((error as NetworkError).cause).toBeInstanceOf(TypeError);
+    }
+  });
+
   it("preserves HTTP status on failed requests", async () => {
     vi.stubGlobal(
       "fetch",
