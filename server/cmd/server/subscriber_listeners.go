@@ -146,7 +146,16 @@ func extractIssueFields(v any) (handler.IssueResponse, bool) {
 
 // addSubscriber adds a user as an issue subscriber and publishes a
 // subscriber:added event for real-time frontend sync.
+//
+// issue_subscriber.user_type is constrained to ('member','agent'). Mention
+// parsing also yields 'issue', 'squad', and 'all' — those have no inbox of
+// their own and must not be forwarded to AddIssueSubscriber, which would
+// otherwise hit a CHECK constraint (SQLSTATE 23514). Drop them here so the
+// per-call sites stay simple and the boundary is enforced in one place.
 func addSubscriber(bus *events.Bus, queries *db.Queries, workspaceID, issueID, userType, userID, reason string) {
+	if userType != "member" && userType != "agent" {
+		return
+	}
 	err := queries.AddIssueSubscriber(context.Background(), db.AddIssueSubscriberParams{
 		IssueID:  parseUUID(issueID),
 		UserType: userType,
