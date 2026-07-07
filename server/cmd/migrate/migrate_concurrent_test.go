@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	crand "crypto/rand"
 	"fmt"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"sort"
@@ -113,7 +113,7 @@ func newFixture(t *testing.T) *fixture {
 	// nanos and a process-local random so re-running with -count=N still
 	// gets a distinct sandbox per iteration even if the wall clock has
 	// not visibly advanced.
-	suffix := fmt.Sprintf("%d_%d", time.Now().UnixNano(), crand.Uint32())
+	suffix := fmt.Sprintf("%d_%d", time.Now().UnixNano(), rand.Uint32()) //nolint:gosec // test-only schema suffix, not cryptographic
 	schema := "migrate_test_" + suffix
 	tableFQN := schema + ".schema_migrations"
 	// Random non-zero positive int64. The high bit is masked off to
@@ -122,7 +122,7 @@ func newFixture(t *testing.T) *fixture {
 	// the production migrationAdvisoryLockKey constant is not strictly
 	// impossible — both are int64 — but the probability is on the order
 	// of 1 in 2^62, which is negligible for a unit-test sandbox.
-	lockKey := int64(crand.Uint64()&0x7fffffffffffffff) | 1
+	lockKey := int64(rand.Uint64()&0x7fffffffffffffff) | 1 //nolint:gosec // test-only advisory lock key, not cryptographic
 
 	ctx := context.Background()
 	if _, err := pool.Exec(ctx, fmt.Sprintf(`CREATE SCHEMA %s`, pgx.Identifier{schema}.Sanitize())); err != nil {

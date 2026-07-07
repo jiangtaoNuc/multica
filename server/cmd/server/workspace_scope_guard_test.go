@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	crand "crypto/rand"
 	"errors"
+	"math/rand/v2"
 	"testing"
 
 	"github.com/google/uuid"
@@ -135,7 +135,7 @@ func seedIssue(ctx context.Context, t *testing.T) pgtype.UUID {
 	var s string
 	// number is unique per workspace; pick a high-range random value to
 	// avoid colliding with concurrent integration tests in the same DB.
-	n := 1_000_000 + int(crand.Uint32()%1_000_000)
+	n := 1_000_000 + rand.IntN(1_000_000) //nolint:gosec // test-only issue number, not cryptographic
 	if err := testPool.QueryRow(ctx, `
 		INSERT INTO issue (workspace_id, title, status, priority, creator_type, creator_id, position, number)
 		VALUES ($1, 'scope-guard test issue', 'todo', 'none', 'member', $2, 0, $3)
