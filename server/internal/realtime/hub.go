@@ -200,13 +200,13 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: checkOrigin,
 }
 
-// scopeKey is the composite key used to look up a "room" of subscribers.
-type scopeKey struct {
+// ScopeKey is the composite key used to look up a "room" of subscribers.
+type ScopeKey struct {
 	Type string
 	ID   string
 }
 
-func sk(t, id string) scopeKey { return scopeKey{Type: t, ID: id} }
+func sk(t, id string) ScopeKey { return ScopeKey{Type: t, ID: id} }
 
 // Client represents a single WebSocket connection with identity and the set
 // of scopes it is currently subscribed to.
@@ -219,7 +219,7 @@ type Client struct {
 
 	// subscriptions is guarded by hub.mu. Tracks the scopes this client is
 	// currently in. Used to clean up rooms on disconnect.
-	subscriptions map[scopeKey]bool
+	subscriptions map[ScopeKey]bool
 
 	// lastSeenEventIDs is used by the dual-write broadcaster (and any
 	// future deliverer) to dedup messages that arrived first via the local
@@ -265,7 +265,7 @@ type SubscriptionCallback func(scopeType, scopeID string)
 
 // Hub manages WebSocket connections organized into scope-based rooms.
 type Hub struct {
-	rooms      map[scopeKey]map[*Client]bool
+	rooms      map[ScopeKey]map[*Client]bool
 	clients    map[*Client]bool // every connected client (used by global Broadcast and snapshots)
 	broadcast  chan []byte
 	register   chan *Client
@@ -282,7 +282,7 @@ type Hub struct {
 // NewHub creates a new Hub instance.
 func NewHub() *Hub {
 	return &Hub{
-		rooms:      make(map[scopeKey]map[*Client]bool),
+		rooms:      make(map[ScopeKey]map[*Client]bool),
 		clients:    make(map[*Client]bool),
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
@@ -344,7 +344,7 @@ func (h *Hub) removeClient(client *Client) {
 	delete(h.clients, client)
 	subs := client.subscriptions
 	client.subscriptions = nil
-	emptied := make([]scopeKey, 0, len(subs))
+	emptied := make([]ScopeKey, 0, len(subs))
 	for key := range subs {
 		if room, ok := h.rooms[key]; ok {
 			delete(room, client)
@@ -387,7 +387,7 @@ func (h *Hub) subscribe(client *Client, scopeType, scopeID string) bool {
 		return false
 	}
 	if client.subscriptions == nil {
-		client.subscriptions = map[scopeKey]bool{}
+		client.subscriptions = map[ScopeKey]bool{}
 	}
 	if client.subscriptions[key] {
 		h.mu.Unlock()
@@ -466,10 +466,10 @@ func (h *Hub) HasLocalSubscribers(scopeType, scopeID string) bool {
 
 // LocalScopes returns the set of scopes currently active on this node.
 // Snapshot only — callers must not assume thread-stability.
-func (h *Hub) LocalScopes() []scopeKey {
+func (h *Hub) LocalScopes() []ScopeKey {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	out := make([]scopeKey, 0, len(h.rooms))
+	out := make([]ScopeKey, 0, len(h.rooms))
 	for k := range h.rooms {
 		out = append(out, k)
 	}
@@ -666,7 +666,7 @@ func (h *Hub) Snapshot() map[string]any {
 }
 
 // authenticateToken validates a JWT or PAT string and returns the user ID.
-func authenticateToken(tokenStr string, pr PATResolver, ctx context.Context) (string, string) {
+func authenticateToken(ctx context.Context, tokenStr string, pr PATResolver) (string, string) {
 	if strings.HasPrefix(tokenStr, "mul_") {
 		if pr == nil {
 			return "", `{"error":"invalid token"}`
@@ -762,7 +762,7 @@ func HandleWebSocket(hub *Hub, mc MembershipChecker, pr PATResolver, resolveSlug
 
 	var userID string
 	if cookie, err := r.Cookie(auth.AuthCookieName); err == nil && cookie.Value != "" {
-		uid, errMsg := authenticateToken(cookie.Value, pr, r.Context())
+		uid, errMsg := authenticateToken(r.Context(), cookie.Value, pr)
 		if errMsg != "" {
 			http.Error(w, errMsg, http.StatusUnauthorized)
 			return
@@ -786,7 +786,7 @@ func HandleWebSocket(hub *Hub, mc MembershipChecker, pr PATResolver, resolveSlug
 			writeWSAuthErrorAndClose(conn, []byte(errMsg), "workspace_id", workspaceID)
 			return
 		}
-		uid, errMsg := authenticateToken(tokenStr, pr, r.Context())
+		uid, errMsg := authenticateToken(r.Context(), tokenStr, pr)
 		if errMsg != "" {
 			writeWSAuthErrorAndClose(conn, []byte(errMsg), "workspace_id", workspaceID)
 			return

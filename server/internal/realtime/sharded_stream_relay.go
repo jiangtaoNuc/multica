@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"log/slog"
+	"math"
 	"sync"
 	"time"
 
@@ -190,7 +191,11 @@ func (r *ShardedStreamRelay) shardFor(scopeType, scopeID string) int {
 	_, _ = h.Write([]byte(scopeType))
 	_, _ = h.Write([]byte{0})
 	_, _ = h.Write([]byte(scopeID))
-	return int(h.Sum32() % uint32(r.config.Shards))
+	shards := r.config.Shards
+	if shards <= 0 || shards > math.MaxUint32 {
+		return 0
+	}
+	return int(h.Sum32() % uint32(shards))
 }
 
 func (r *ShardedStreamRelay) readShard(ctx context.Context, shard int) {
