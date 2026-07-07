@@ -94,8 +94,16 @@ jobs:
       - name: Build
         run: cd server && go build ./...
 
+      - name: Check go.mod / go.sum drift
+        run: |
+          cd server && go mod tidy
+          git diff --exit-code -- server/go.mod server/go.sum
+
       - name: Run migrations
         run: cd server && go run ./cmd/migrate up
+
+      - name: Run govulncheck
+        run: bash scripts/govulncheck.sh
 
       - name: Test
         run: cd server && go test -race ./...
