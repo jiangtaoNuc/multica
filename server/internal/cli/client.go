@@ -217,7 +217,7 @@ func (c *APIClient) GetJSON(ctx context.Context, path string, out any) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return newHTTPError(http.MethodGet, path, resp)
@@ -243,7 +243,7 @@ func (c *APIClient) GetJSONWithHeaders(ctx context.Context, path string, out any
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return nil, newHTTPError(http.MethodGet, path, resp)
@@ -274,7 +274,7 @@ func (c *APIClient) DeleteJSONResponse(ctx context.Context, path string, out any
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return newHTTPError(http.MethodDelete, path, resp)
@@ -303,7 +303,7 @@ func (c *APIClient) DeleteJSONWithBody(ctx context.Context, path string, body an
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return newHTTPError(http.MethodDelete, path, resp)
@@ -330,7 +330,7 @@ func (c *APIClient) PostJSON(ctx context.Context, path string, body any, out any
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return newHTTPError(http.MethodPost, path, resp)
@@ -360,7 +360,7 @@ func (c *APIClient) PutJSON(ctx context.Context, path string, body any, out any)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return newHTTPError(http.MethodPut, path, resp)
@@ -390,7 +390,7 @@ func (c *APIClient) PatchJSON(ctx context.Context, path string, body any, out an
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return newHTTPError(http.MethodPatch, path, resp)
@@ -448,7 +448,7 @@ func (c *APIClient) UploadFile(ctx context.Context, fileData []byte, filename st
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return "", newHTTPError(http.MethodPost, "/api/upload-file", resp)
@@ -510,7 +510,7 @@ func (c *APIClient) UploadFileWithURL(ctx context.Context, fileData []byte, file
 	if err != nil {
 		return "", "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return "", "", newHTTPError(http.MethodPost, "/api/upload-file", resp)
@@ -561,7 +561,7 @@ func (c *APIClient) DownloadFile(ctx context.Context, downloadURL string) ([]byt
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return nil, newHTTPError(http.MethodGet, downloadURL, resp)
@@ -582,7 +582,7 @@ func (c *APIClient) HealthCheck(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	data, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 	if resp.StatusCode >= 400 {

@@ -321,7 +321,7 @@ func runIssueMetadataDelete(cmd *cobra.Command, args []string) error {
 		if output == "json" {
 			return cli.PrintJSON(os.Stdout, map[string]any{"deleted": true})
 		}
-		fmt.Fprintln(os.Stdout, "Key deleted.")
+		_, _ = fmt.Fprintln(os.Stdout, "Key deleted.")
 		return nil
 	}
 	metadata, _ := result["metadata"].(map[string]any)

@@ -1828,7 +1828,7 @@ func (s *TaskService) runInTx(ctx context.Context, fn func(*db.Queries) error) e
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	if err := fn(s.Queries.WithTx(tx)); err != nil {
 		return err
 	}

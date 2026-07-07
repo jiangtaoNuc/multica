@@ -498,7 +498,7 @@ func (h *Handler) GoogleLogin(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadGateway, "failed to exchange code with Google")
 		return
 	}
-	defer tokenResp.Body.Close()
+	defer func() { _ = tokenResp.Body.Close() }()
 
 	tokenBody, err := io.ReadAll(tokenResp.Body)
 	if err != nil {
@@ -533,7 +533,7 @@ func (h *Handler) GoogleLogin(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadGateway, "failed to fetch user info from Google")
 		return
 	}
-	defer userInfoResp.Body.Close()
+	defer func() { _ = userInfoResp.Body.Close() }()
 
 	var gUser googleUserInfo
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&gUser); err != nil {

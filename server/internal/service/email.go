@@ -249,7 +249,7 @@ func (s *EmailService) sendSMTP(to, subject, htmlBody string) error {
 	if err != nil {
 		return err
 	}
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 
 	if s.smtpUsername != "" {
 		fallbackToLogin, authErr := smtpAuthWithFallback(smtpClientAdapter{client: c}, s.smtpHost, s.smtpUsername, s.smtpPassword)
@@ -263,7 +263,7 @@ func (s *EmailService) sendSMTP(to, subject, htmlBody string) error {
 			if err != nil {
 				return fmt.Errorf("smtp auth: plain auth failed (%v); login reconnect failed: %w", authErr, err)
 			}
-			defer c.Close()
+			defer func() { _ = c.Close() }()
 
 			if err = c.Auth(&loginAuth{username: s.smtpUsername, password: s.smtpPassword, host: s.smtpHost}); err != nil {
 				return fmt.Errorf("smtp auth: plain auth failed (%v); login auth fallback failed: %w", authErr, err)

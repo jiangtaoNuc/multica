@@ -430,6 +430,7 @@ func TestOpencodeBackendInjectsMCPConfigViaEnv(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	result := <-session.Result
@@ -492,6 +493,7 @@ func TestOpencodeBackendOmitsMCPEnvWhenEmpty(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	if r := <-session.Result; r.Status != "completed" {
@@ -542,6 +544,7 @@ func TestOpencodeBackendOverridesUserOpenCodeConfigContent(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	if r := <-session.Result; r.Status != "completed" {

@@ -10,8 +10,8 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"strings"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -146,7 +146,7 @@ func (f *HTTPConnectionTokenFetcher) Endpoint(ctx context.Context, creds Install
 	if err != nil {
 		return WSEndpoint{}, fmt.Errorf("http do: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	rawResp, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return WSEndpoint{}, fmt.Errorf("read body: %w", err)

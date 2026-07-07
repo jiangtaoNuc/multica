@@ -246,6 +246,7 @@ func TestCodebuddyExecuteSurfacesStderr(t *testing.T) {
 	// Drain messages.
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -374,11 +375,11 @@ Options:
 	}
 	checks := map[string]string{
 		"gpt-5.5":                "openai",
-		"gemini-3.1-pro":        "google",
-		"glm-5.1-ioa":           "zhipu",
-		"minimax-m2.7-ioa":      "minimax",
-		"kimi-k2.6-ioa":         "kimi",
-		"hy3-preview-ioa":       "hunyuan",
+		"gemini-3.1-pro":         "google",
+		"glm-5.1-ioa":            "zhipu",
+		"minimax-m2.7-ioa":       "minimax",
+		"kimi-k2.6-ioa":          "kimi",
+		"hy3-preview-ioa":        "hunyuan",
 		"deepseek-v3-2-volc-ioa": "deepseek",
 	}
 	for id, want := range checks {

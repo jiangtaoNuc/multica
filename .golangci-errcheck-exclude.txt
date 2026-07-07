@@ -1,0 +1,20 @@
+# errcheck exclusions: safe-to-ignore error returns
+# These patterns are standard in Go codebases and checking every one would
+# drown out real unhandled errors.
+
+# Deferred/best-effort Close calls
+Close$
+
+# Best-effort cleanup and temp-file removal
+os\.Remove
+os\.RemoveAll
+os\.MkdirAll
+os\.WriteFile
+
+# Writes to in-memory buffers, response writers, and test fixtures
+io\.WriteString
+.*\.Write$
+.*\.WriteString$
+
+# Encoding to response writers / test buffers
+encoding/json\.Encoder\.Encode

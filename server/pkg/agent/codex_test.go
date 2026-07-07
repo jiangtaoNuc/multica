@@ -1442,6 +1442,7 @@ func TestCodexExecuteSurfacesStderrWhenChildExitsEarly(t *testing.T) {
 	// Drain message stream so the lifecycle goroutine can progress.
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -1825,6 +1826,7 @@ func executeFakeCodex(t *testing.T, fakePath string, opts ExecOptions) Result {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	select {

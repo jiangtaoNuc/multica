@@ -146,7 +146,7 @@ func (d *Daemon) gcWorkspace(ctx context.Context, wsDir string, stats *gcStats) 
 	if cleanedHere > 0 {
 		remaining, _ := os.ReadDir(wsDir)
 		if len(remaining) == 0 {
-			os.Remove(wsDir)
+			_ = os.Remove(wsDir)
 		}
 	}
 }
@@ -329,7 +329,7 @@ func (d *Daemon) gcDecisionChat(ctx context.Context, taskDir string, meta *exece
 		// An active chat session must never be reclaimed by mtime — that
 		// would silently kill a user's idle session and break "PriorWorkDir"
 		// resume on their next message. This is the explicit short-circuit
-		// the issue body called out as verifyable behavior #2.
+		// the issue body called out as verifiable behavior #2.
 		return gcActionSkip
 	case "archived":
 		if time.Since(status.UpdatedAt) > d.cfg.GCTTL {

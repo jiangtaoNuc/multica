@@ -230,6 +230,7 @@ func TestQoderBackendSetModelFailureFailsTask(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -285,6 +286,7 @@ func TestQoderBackendInvokesACPFlagAndFiltersBlockedArgs(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	<-session.Result
@@ -342,6 +344,7 @@ func TestQoderBackendHappyPath(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -380,6 +383,7 @@ func TestQoderBackendNonPositiveTimeoutDoesNotImposeDeadline(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -415,6 +419,7 @@ func TestQoderBackendDoesNotWaitForeverForReaderAfterPromptDone(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -469,6 +474,7 @@ func TestQoderBackendIgnoresLateReaderOutputAfterGrace(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -525,6 +531,7 @@ func TestQoderForwardsMcpAuthHeaderToSessionNew(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	<-session.Result
@@ -583,6 +590,7 @@ func TestQoderFiltersRemoteMcpWhenInitializeDoesNotAdvertiseCapability(t *testin
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	<-session.Result
@@ -634,6 +642,7 @@ func TestQoderPromotesTerminalProviderErrorWithOutput(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -675,6 +684,7 @@ func TestQoderBackendAttributesUsageToACPDefaultModel(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -724,6 +734,7 @@ func TestQoderBackendClearsSessionIDWhenResumedSessionNotFoundAtPrompt(t *testin
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -770,6 +781,7 @@ func TestQoderBackendClearsSessionIDWhenResumedSessionNotFoundAtSetModel(t *test
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 

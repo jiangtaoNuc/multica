@@ -381,8 +381,7 @@ func seedTaskUsageFixture(t *testing.T, ctx context.Context, pool *pgxpool.Pool)
 	`, agentID, runtimeID).Scan(&taskID); err != nil {
 		// agent_task_queue schema may differ; fall back to inferring
 		// the smallest column set.
-		var altErr error
-		altErr = pool.QueryRow(ctx, `
+		var altErr error = pool.QueryRow(ctx, `
 			INSERT INTO agent_task_queue (agent_id, runtime_id)
 			VALUES ($1, $2)
 			RETURNING id
