@@ -866,10 +866,10 @@ func newNodeID() string {
 
 // nextBackoff doubles the current backoff up to max. Pure helper so
 // the supervise loop reads top-to-bottom.
-func nextBackoff(cur, max time.Duration) time.Duration {
+func nextBackoff(cur, maxBackoff time.Duration) time.Duration {
 	next := cur * 2
-	if next > max {
-		return max
+	if next > maxBackoff {
+		return maxBackoff
 	}
 	return next
 }
@@ -882,6 +882,7 @@ func jitter(d time.Duration) time.Duration {
 		return d
 	}
 	delta := d / 2
+	//nolint:gosec // math/rand is sufficient for non-cryptographic reconnect backoff jitter.
 	return d - delta + time.Duration(mathrand.Int64N(int64(2*delta)+1))
 }
 

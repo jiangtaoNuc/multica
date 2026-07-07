@@ -20,10 +20,10 @@ var markdownPatterns = []*regexp.Regexp{
 	regexp.MustCompile("(?m)^[ \t]*\\d+\\.[ \t]"),                 // ordered list
 	regexp.MustCompile("(?m)^>[ \t]"),                             // blockquote
 	regexp.MustCompile("(?m)^[ \t]*(?:---|\\*\\*\\*|___)[ \t]*$"), // hr / thematic break
-	regexp.MustCompile("\\*\\*[^*\\n]+\\*\\*"),                    // **bold**
-	regexp.MustCompile("__[^_\\n]+__"),                            // __bold__
+	regexp.MustCompile(`\*\*[^*\n]+\*\*`),                         // **bold**
+	regexp.MustCompile(`__[^_\n]+__`),                             // __bold__
 	regexp.MustCompile("(?m)^[ \t]*\\|.+\\|[ \t]*$"),              // table row (must have | on both ends)
-	regexp.MustCompile("\\[[^\\]\\n]+\\]\\([^)\\n]+\\)"),          // [text](url) link / image
+	regexp.MustCompile(`\[[^\]\n]+\]\([^)\n]+\)`),                 // [text](url) link / image
 }
 
 // containsMarkdown returns true when the body almost certainly

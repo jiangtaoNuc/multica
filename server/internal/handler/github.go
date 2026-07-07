@@ -1390,8 +1390,8 @@ func (h *Handler) lookupIssueByIdentifier(ctx context.Context, workspaceID pgtyp
 	if !strings.EqualFold(gotPrefix, prefix) {
 		return db.Issue{}, false
 	}
-	n, err := strconv.Atoi(numStr)
-	if err != nil {
+	n, err := strconv.ParseInt(numStr, 10, 32)
+	if err != nil || n <= 0 {
 		return db.Issue{}, false
 	}
 	issue, err := h.Queries.GetIssueByNumber(ctx, db.GetIssueByNumberParams{

@@ -59,11 +59,15 @@ func (s *RedisUpdateStore) Create(ctx context.Context, runtimeID, targetVersion 
 	}
 
 	activeKey := updateActiveKey(runtimeID)
-	ok, err := s.rdb.SetNX(ctx, activeKey, req.ID, updateStoreRetention).Result()
-	if err != nil {
+	cmd := s.rdb.SetArgs(ctx, activeKey, req.ID, redis.SetArgs{
+		Mode: "NX",
+		TTL:  updateStoreRetention,
+	})
+	val, err := cmd.Result()
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, fmt.Errorf("reserve active update: %w", err)
 	}
-	if !ok {
+	if val != "OK" {
 		return nil, errUpdateInProgress
 	}
 

@@ -601,8 +601,8 @@ func TestRollupTaskUsageHourlyReassignBetweenRuntimes(t *testing.T) {
 	}
 
 	runWindow("initial rollup")
-	if old, new := runtimeTotal(oldRuntimeID), runtimeTotal(newRuntimeID); old != 700 || new != 0 {
-		t.Fatalf("initial: expected old=700 new=0, got old=%d new=%d", old, new)
+	if old, newTotal := runtimeTotal(oldRuntimeID), runtimeTotal(newRuntimeID); old != 700 || newTotal != 0 {
+		t.Fatalf("initial: expected old=700 new=0, got old=%d new=%d", old, newTotal)
 	}
 
 	// Reassignment fires trg_atq_dirty_hourly, which enqueues the OLD and
@@ -617,8 +617,8 @@ func TestRollupTaskUsageHourlyReassignBetweenRuntimes(t *testing.T) {
 	}
 
 	runWindow("rollup after reassign")
-	if old, new := runtimeTotal(oldRuntimeID), runtimeTotal(newRuntimeID); old != 0 || new != 700 {
-		t.Fatalf("after reassign: expected old=0 new=700, got old=%d new=%d", old, new)
+	if old, newTotal := runtimeTotal(oldRuntimeID), runtimeTotal(newRuntimeID); old != 0 || newTotal != 700 {
+		t.Fatalf("after reassign: expected old=0 new=700, got old=%d new=%d", old, newTotal)
 	}
 	// The window function must drain every queue row whose enqueued_at
 	// predates p_to — a regression on that DELETE pins recomputes forever.

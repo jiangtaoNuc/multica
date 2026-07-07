@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math"
 	"net/http"
 	"sort"
 	"strconv"
@@ -2299,6 +2300,10 @@ func (h *Handler) ReportTaskMessages(w http.ResponseWriter, r *http.Request) {
 		if msg.Input != nil {
 			inputJSON, _ = json.Marshal(msg.Input)
 		}
+		if msg.Seq < math.MinInt32 || msg.Seq > math.MaxInt32 {
+			writeError(w, http.StatusBadRequest, "invalid message sequence")
+			return
+		}
 		created, createErr := h.Queries.CreateTaskMessage(r.Context(), db.CreateTaskMessageParams{
 			TaskID:  parseUUID(taskID),
 			Seq:     int32(msg.Seq),
@@ -2360,8 +2365,8 @@ func (h *Handler) ListTaskMessages(w http.ResponseWriter, r *http.Request) {
 		err      error
 	)
 	if sinceStr := r.URL.Query().Get("since"); sinceStr != "" {
-		sinceSeq, parseErr := strconv.Atoi(sinceStr)
-		if parseErr != nil {
+		sinceSeq, parseErr := strconv.ParseInt(sinceStr, 10, 32)
+		if parseErr != nil || sinceSeq < 0 {
 			writeError(w, http.StatusBadRequest, "invalid since parameter")
 			return
 		}
@@ -2490,8 +2495,8 @@ func (h *Handler) ListTaskMessagesByUser(w http.ResponseWriter, r *http.Request)
 		queryErr error
 	)
 	if sinceStr := r.URL.Query().Get("since"); sinceStr != "" {
-		sinceSeq, parseErr := strconv.Atoi(sinceStr)
-		if parseErr != nil {
+		sinceSeq, parseErr := strconv.ParseInt(sinceStr, 10, 32)
+		if parseErr != nil || sinceSeq < 0 {
 			writeError(w, http.StatusBadRequest, "invalid since parameter")
 			return
 		}

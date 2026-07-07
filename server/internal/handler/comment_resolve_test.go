@@ -70,7 +70,7 @@ type commentEventCapture struct {
 
 func captureCommentEvents(t *testing.T, issueID string) *commentEventCapture {
 	t.Helper()
-	cap := &commentEventCapture{}
+	capture := &commentEventCapture{}
 	record := func(e events.Event) {
 		m, ok := e.Payload.(map[string]any)
 		if !ok {
@@ -80,16 +80,16 @@ func captureCommentEvents(t *testing.T, issueID string) *commentEventCapture {
 		if !ok || c.IssueID != issueID {
 			return
 		}
-		cap.mu.Lock()
-		cap.events = append(cap.events, struct {
+		capture.mu.Lock()
+		capture.events = append(capture.events, struct {
 			Type      string
 			CommentID string
 		}{e.Type, c.ID})
-		cap.mu.Unlock()
+		capture.mu.Unlock()
 	}
 	testHandler.Bus.Subscribe(protocol.EventCommentResolved, record)
 	testHandler.Bus.Subscribe(protocol.EventCommentUnresolved, record)
-	return cap
+	return capture
 }
 
 func (c *commentEventCapture) countFor(eventType, commentID string) int {
@@ -169,7 +169,7 @@ func TestResolveComment_ReplacesPriorThreadResolution(t *testing.T) {
 		t.Skip("database not available")
 	}
 	fx := newResolveTestFixture(t)
-	cap := captureCommentEvents(t, fx.IssueID)
+	capture := captureCommentEvents(t, fx.IssueID)
 
 	// Resolve a1 → it is the resolution.
 	resolveCommentHTTP(t, fx.A1)
@@ -188,10 +188,10 @@ func TestResolveComment_ReplacesPriorThreadResolution(t *testing.T) {
 
 	// The cleared sibling must broadcast comment:unresolved so granular realtime
 	// consumers drop the stale resolution; b1 must broadcast comment:resolved.
-	if got := cap.countFor(protocol.EventCommentUnresolved, fx.A1); got != 1 {
+	if got := capture.countFor(protocol.EventCommentUnresolved, fx.A1); got != 1 {
 		t.Fatalf("expected exactly 1 comment:unresolved for a1, got %d", got)
 	}
-	if got := cap.countFor(protocol.EventCommentResolved, fx.B1); got != 1 {
+	if got := capture.countFor(protocol.EventCommentResolved, fx.B1); got != 1 {
 		t.Fatalf("expected exactly 1 comment:resolved for b1, got %d", got)
 	}
 }
@@ -235,7 +235,7 @@ func TestResolveComment_ReResolveIsIdempotent(t *testing.T) {
 		t.Skip("database not available")
 	}
 	fx := newResolveTestFixture(t)
-	cap := captureCommentEvents(t, fx.IssueID)
+	capture := captureCommentEvents(t, fx.IssueID)
 
 	resolveCommentHTTP(t, fx.A1)
 	first := commentResolvedAt(t, fx.A1)
@@ -248,7 +248,7 @@ func TestResolveComment_ReResolveIsIdempotent(t *testing.T) {
 	if second == nil || !second.Equal(*first) {
 		t.Fatalf("re-resolve must keep the original resolved_at (got %v, want %v)", second, first)
 	}
-	if got := cap.countFor(protocol.EventCommentResolved, fx.A1); got != 1 {
+	if got := capture.countFor(protocol.EventCommentResolved, fx.A1); got != 1 {
 		t.Fatalf("re-resolve no-op must not emit a second comment:resolved (got %d)", got)
 	}
 }

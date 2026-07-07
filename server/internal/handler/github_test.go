@@ -1262,15 +1262,15 @@ func TestDerivePRMergeableState(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, clear := derivePRMergeableState(tc.action, tc.payload, tc.baseRefChanged)
+			got, cleared := derivePRMergeableState(tc.action, tc.payload, tc.baseRefChanged)
 			if got.Valid != tc.wantValid {
 				t.Errorf("Valid=%v want %v", got.Valid, tc.wantValid)
 			}
 			if got.String != tc.wantStr {
 				t.Errorf("String=%q want %q", got.String, tc.wantStr)
 			}
-			if clear != tc.wantClear {
-				t.Errorf("clear=%v want %v", clear, tc.wantClear)
+			if cleared != tc.wantClear {
+				t.Errorf("clear=%v want %v", cleared, tc.wantClear)
 			}
 		})
 	}
@@ -1398,7 +1398,7 @@ func fireCheckSuiteWebhookWithStatus(t *testing.T, secret string, installationID
 	}
 }
 
-func setupPRTestIssue(t *testing.T, ctx context.Context, secret string) (IssueResponse, int64) {
+func setupPRTestIssue(ctx context.Context, t *testing.T, secret string) (IssueResponse, int64) {
 	t.Helper()
 	t.Setenv("GITHUB_WEBHOOK_SECRET", secret)
 	w := httptest.NewRecorder()
@@ -1443,7 +1443,7 @@ func TestWebhook_CheckSuite_AggregatesAcrossApps(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-aggregate-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	head := "abc1234567890"
 	firePullRequestWebhookWithHead(t, secret, created.Identifier, installationID, "ci-repo-a", 11, "opened", head, "")
@@ -1475,7 +1475,7 @@ func TestWebhook_CheckSuite_OldHeadIgnored(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-oldhead-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	oldHead := "old1111111111"
 	newHead := "new2222222222"
@@ -1520,7 +1520,7 @@ func TestWebhook_CheckSuite_LateOlderEventIgnored(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-ordering-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	head := "ord1234567890"
 	firePullRequestWebhookWithHead(t, secret, created.Identifier, installationID, "ci-repo-c", 33, "opened", head, "")
@@ -1551,7 +1551,7 @@ func TestWebhook_CheckSuite_QueuedCountsAsPending(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-pending-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	head := "pending1234567"
 	firePullRequestWebhookWithHead(t, secret, created.Identifier, installationID, "ci-repo-pending", 55, "opened", head, "")
@@ -1603,7 +1603,7 @@ func TestWebhook_CheckSuite_OutOfOrderReplaysOnPRUpsert(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-oooreplay-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	head := "oo01234567890"
 	// Suite event lands FIRST — the PR row does not exist yet.
@@ -1661,7 +1661,7 @@ func TestWebhook_CheckSuite_OutOfOrderStashKeepsNewer(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-stash-order-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	head := "stash01234567"
 	// Newer event lands FIRST while the PR row does not exist yet.
@@ -1696,7 +1696,7 @@ func TestWebhook_PullRequest_SynchronizeClearsMergeable(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-mergeable-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	// Open with no mergeable verdict, then a metadata event populates clean.
 	firePullRequestWebhookWithHead(t, secret, created.Identifier, installationID, "ci-repo-d", 44, "opened", "head1", "")
@@ -1737,7 +1737,7 @@ func TestWebhook_PullRequest_MetadataPreservesMergeable(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-mergeable-preserve-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	// Open, then set a known verdict via a labeled event carrying clean.
 	firePullRequestWebhookWithHead(t, secret, created.Identifier, installationID, "ci-repo-e", 55, "opened", "headA", "")

@@ -119,7 +119,7 @@ func newDaemonTokenRequest(method, path string, body any, workspaceID, daemonID 
 	return req.WithContext(ctx)
 }
 
-func createClaimReclaimRuntime(t *testing.T, ctx context.Context, name string) string {
+func createClaimReclaimRuntime(ctx context.Context, t *testing.T, name string) string {
 	t.Helper()
 
 	var runtimeID string
@@ -138,7 +138,7 @@ func createClaimReclaimRuntime(t *testing.T, ctx context.Context, name string) s
 	return runtimeID
 }
 
-func createClaimReclaimAgentAndIssue(t *testing.T, ctx context.Context, runtimeID, name string) (string, string) {
+func createClaimReclaimAgentAndIssue(ctx context.Context, t *testing.T, runtimeID, name string) (string, string) {
 	t.Helper()
 
 	var agentID string
@@ -171,7 +171,7 @@ func createClaimReclaimAgentAndIssue(t *testing.T, ctx context.Context, runtimeI
 	return agentID, issueID
 }
 
-func createDispatchedClaimFixtureTask(t *testing.T, ctx context.Context, agentID, runtimeID, issueID, dispatchedAge string, started bool) string {
+func createDispatchedClaimFixtureTask(ctx context.Context, t *testing.T, agentID, runtimeID, issueID, dispatchedAge string, started bool) string {
 	t.Helper()
 
 	var taskID string
@@ -221,9 +221,9 @@ func TestClaimTaskByRuntime_ReclaimsStaleDispatchedTask(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	runtimeID := createClaimReclaimRuntime(t, ctx, "Stale dispatch reclaim runtime")
-	agentID, issueID := createClaimReclaimAgentAndIssue(t, ctx, runtimeID, "Stale dispatch reclaim agent")
-	taskID := createDispatchedClaimFixtureTask(t, ctx, agentID, runtimeID, issueID, "120 seconds", false)
+	runtimeID := createClaimReclaimRuntime(ctx, t, "Stale dispatch reclaim runtime")
+	agentID, issueID := createClaimReclaimAgentAndIssue(ctx, t, runtimeID, "Stale dispatch reclaim agent")
+	taskID := createDispatchedClaimFixtureTask(ctx, t, agentID, runtimeID, issueID, "120 seconds", false)
 
 	task, body := claimTaskByRuntimeForTest(t, runtimeID)
 	if task == nil {
@@ -252,9 +252,9 @@ func TestClaimTaskByRuntime_DoesNotReclaimFreshDispatchedTask(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	runtimeID := createClaimReclaimRuntime(t, ctx, "Fresh dispatch reclaim runtime")
-	agentID, issueID := createClaimReclaimAgentAndIssue(t, ctx, runtimeID, "Fresh dispatch reclaim agent")
-	taskID := createDispatchedClaimFixtureTask(t, ctx, agentID, runtimeID, issueID, "75 seconds", false)
+	runtimeID := createClaimReclaimRuntime(ctx, t, "Fresh dispatch reclaim runtime")
+	agentID, issueID := createClaimReclaimAgentAndIssue(ctx, t, runtimeID, "Fresh dispatch reclaim agent")
+	taskID := createDispatchedClaimFixtureTask(ctx, t, agentID, runtimeID, issueID, "75 seconds", false)
 
 	task, body := claimTaskByRuntimeForTest(t, runtimeID)
 	if task != nil {
@@ -280,9 +280,9 @@ func TestClaimTaskByRuntime_DoesNotReclaimAlreadyStartedTask(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	runtimeID := createClaimReclaimRuntime(t, ctx, "Started dispatch reclaim runtime")
-	agentID, issueID := createClaimReclaimAgentAndIssue(t, ctx, runtimeID, "Started dispatch reclaim agent")
-	taskID := createDispatchedClaimFixtureTask(t, ctx, agentID, runtimeID, issueID, "120 seconds", true)
+	runtimeID := createClaimReclaimRuntime(ctx, t, "Started dispatch reclaim runtime")
+	agentID, issueID := createClaimReclaimAgentAndIssue(ctx, t, runtimeID, "Started dispatch reclaim agent")
+	taskID := createDispatchedClaimFixtureTask(ctx, t, agentID, runtimeID, issueID, "120 seconds", true)
 
 	task, body := claimTaskByRuntimeForTest(t, runtimeID)
 	if task != nil {
@@ -308,10 +308,10 @@ func TestClaimTaskByRuntime_DoesNotReclaimDifferentRuntimeTask(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	claimingRuntimeID := createClaimReclaimRuntime(t, ctx, "Claiming dispatch reclaim runtime")
-	owningRuntimeID := createClaimReclaimRuntime(t, ctx, "Owning dispatch reclaim runtime")
-	agentID, issueID := createClaimReclaimAgentAndIssue(t, ctx, owningRuntimeID, "Different runtime reclaim agent")
-	taskID := createDispatchedClaimFixtureTask(t, ctx, agentID, owningRuntimeID, issueID, "120 seconds", false)
+	claimingRuntimeID := createClaimReclaimRuntime(ctx, t, "Claiming dispatch reclaim runtime")
+	owningRuntimeID := createClaimReclaimRuntime(ctx, t, "Owning dispatch reclaim runtime")
+	agentID, issueID := createClaimReclaimAgentAndIssue(ctx, t, owningRuntimeID, "Different runtime reclaim agent")
+	taskID := createDispatchedClaimFixtureTask(ctx, t, agentID, owningRuntimeID, issueID, "120 seconds", false)
 
 	task, body := claimTaskByRuntimeForTest(t, claimingRuntimeID)
 	if task != nil {
@@ -358,9 +358,9 @@ func TestClaimTaskByRuntime_PopulatesWorkspaceContext(t *testing.T) {
 		}
 	})
 
-	runtimeID := createClaimReclaimRuntime(t, ctx, "Workspace context claim runtime")
-	agentID, issueID := createClaimReclaimAgentAndIssue(t, ctx, runtimeID, "Workspace context claim agent")
-	taskID := createDispatchedClaimFixtureTask(t, ctx, agentID, runtimeID, issueID, "120 seconds", false)
+	runtimeID := createClaimReclaimRuntime(ctx, t, "Workspace context claim runtime")
+	agentID, issueID := createClaimReclaimAgentAndIssue(ctx, t, runtimeID, "Workspace context claim agent")
+	taskID := createDispatchedClaimFixtureTask(ctx, t, agentID, runtimeID, issueID, "120 seconds", false)
 
 	w := httptest.NewRecorder()
 	req := newDaemonTokenRequest("POST", "/api/daemon/runtimes/"+runtimeID+"/tasks/claim", nil,
@@ -417,9 +417,9 @@ func TestClaimTaskByRuntime_WorkspaceContextEmptyWhenUnset(t *testing.T) {
 		}
 	})
 
-	runtimeID := createClaimReclaimRuntime(t, ctx, "Workspace context empty claim runtime")
-	agentID, issueID := createClaimReclaimAgentAndIssue(t, ctx, runtimeID, "Workspace context empty claim agent")
-	taskID := createDispatchedClaimFixtureTask(t, ctx, agentID, runtimeID, issueID, "120 seconds", false)
+	runtimeID := createClaimReclaimRuntime(ctx, t, "Workspace context empty claim runtime")
+	agentID, issueID := createClaimReclaimAgentAndIssue(ctx, t, runtimeID, "Workspace context empty claim agent")
+	taskID := createDispatchedClaimFixtureTask(ctx, t, agentID, runtimeID, issueID, "120 seconds", false)
 
 	w := httptest.NewRecorder()
 	req := newDaemonTokenRequest("POST", "/api/daemon/runtimes/"+runtimeID+"/tasks/claim", nil,
@@ -466,8 +466,8 @@ func TestClaimTaskByRuntime_MissingRuntimeOwnerCancelsAndRejects(t *testing.T) {
 	}
 	t.Cleanup(func() { testPool.Exec(ctx, `DELETE FROM agent_runtime WHERE id = $1`, runtimeID) })
 
-	agentID, issueID := createClaimReclaimAgentAndIssue(t, ctx, runtimeID, "Missing owner claim agent")
-	taskID := createDispatchedClaimFixtureTask(t, ctx, agentID, runtimeID, issueID, "120 seconds", false)
+	agentID, issueID := createClaimReclaimAgentAndIssue(ctx, t, runtimeID, "Missing owner claim agent")
+	taskID := createDispatchedClaimFixtureTask(ctx, t, agentID, runtimeID, issueID, "120 seconds", false)
 
 	w := httptest.NewRecorder()
 	req := newDaemonTokenRequest("POST", "/api/daemon/runtimes/"+runtimeID+"/tasks/claim", nil,
@@ -2070,7 +2070,7 @@ func TestClaimTask_QuickCreateInjectsProjectDescription(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	agentID, runtimeID, daemonID := createRuntimeGuardAgent(t, ctx)
+	agentID, runtimeID, daemonID := createRuntimeGuardAgent(ctx, t)
 
 	const projectDescription = "Use the design system tokens; never hardcode colors."
 	var projectID string
@@ -2715,7 +2715,7 @@ func claimTaskForRuntimeGuard(t *testing.T, runtimeID, daemonID string) *claimRu
 	return resp.Task
 }
 
-func createRuntimeGuardAgent(t *testing.T, ctx context.Context) (agentID, runtimeID, daemonID string) {
+func createRuntimeGuardAgent(ctx context.Context, t *testing.T) (agentID, runtimeID, daemonID string) {
 	t.Helper()
 
 	daemonID = "runtime-guard-" + strings.ToLower(strings.ReplaceAll(t.Name(), "/", "-"))
@@ -2762,7 +2762,7 @@ func createRuntimeGuardAgent(t *testing.T, ctx context.Context) (agentID, runtim
 	return agentID, runtimeID, daemonID
 }
 
-func createRuntimeGuardRuntime(t *testing.T, ctx context.Context, provider string) string {
+func createRuntimeGuardRuntime(ctx context.Context, t *testing.T, provider string) string {
 	t.Helper()
 
 	var runtimeID string
@@ -2896,8 +2896,8 @@ func TestClaimTask_IssuePriorSessionRuntimeGuard(t *testing.T) {
 
 	ctx := context.Background()
 
-	agentID, runtimeID, daemonID := createRuntimeGuardAgent(t, ctx)
-	oldRuntimeID := createRuntimeGuardRuntime(t, ctx, "kimi")
+	agentID, runtimeID, daemonID := createRuntimeGuardAgent(ctx, t)
+	oldRuntimeID := createRuntimeGuardRuntime(ctx, t, "kimi")
 
 	var skipIssueID string
 	if err := testPool.QueryRow(ctx, `
@@ -3085,8 +3085,8 @@ func TestClaimTask_ChatPriorSessionRuntimeGuard(t *testing.T) {
 
 	ctx := context.Background()
 
-	agentID, runtimeID, daemonID := createRuntimeGuardAgent(t, ctx)
-	oldRuntimeID := createRuntimeGuardRuntime(t, ctx, "kimi")
+	agentID, runtimeID, daemonID := createRuntimeGuardAgent(ctx, t)
+	oldRuntimeID := createRuntimeGuardRuntime(ctx, t, "kimi")
 
 	var skipSessionID string
 	if err := testPool.QueryRow(ctx, `
@@ -3179,7 +3179,7 @@ func TestClaimTask_ChatDeliversAllUnansweredUserMessages(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	agentID, runtimeID, daemonID := createRuntimeGuardAgent(t, ctx)
+	agentID, runtimeID, daemonID := createRuntimeGuardAgent(ctx, t)
 
 	var sessionID string
 	if err := testPool.QueryRow(ctx, `
@@ -3260,7 +3260,7 @@ func TestClaimTask_ChatPopulatesInitiator(t *testing.T) {
 		t.Skip("database not available")
 	}
 	ctx := context.Background()
-	agentID, runtimeID, daemonID := createRuntimeGuardAgent(t, ctx)
+	agentID, runtimeID, daemonID := createRuntimeGuardAgent(ctx, t)
 
 	// A separate user stands in for the Lark group session creator (installer).
 	var installerID string
@@ -3330,7 +3330,7 @@ func TestClaimTask_QuickCreatePopulatesThreadName(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	agentID, runtimeID, daemonID := createRuntimeGuardAgent(t, ctx)
+	agentID, runtimeID, daemonID := createRuntimeGuardAgent(ctx, t)
 
 	quickPrompt := "create a follow-up issue for Codex session titles"
 	attachmentID := "019ec09d-6222-722b-bdfa-427b105d80be"
@@ -3365,7 +3365,7 @@ func TestClaimTask_ChatForceFreshSessionSkipsPriorSession(t *testing.T) {
 
 	ctx := context.Background()
 
-	agentID, runtimeID, daemonID := createRuntimeGuardAgent(t, ctx)
+	agentID, runtimeID, daemonID := createRuntimeGuardAgent(ctx, t)
 
 	var chatSessionID string
 	if err := testPool.QueryRow(ctx, `
@@ -3420,7 +3420,7 @@ func TestClaimTask_ChatLegacyNullRuntimeFallsBackToTaskRow(t *testing.T) {
 
 	ctx := context.Background()
 
-	agentID, runtimeID, daemonID := createRuntimeGuardAgent(t, ctx)
+	agentID, runtimeID, daemonID := createRuntimeGuardAgent(ctx, t)
 
 	var legacySessionID string
 	if err := testPool.QueryRow(ctx, `
@@ -3940,7 +3940,7 @@ func TestMembershipCache_InvalidatedOnDeleteWorkspace(t *testing.T) {
 // createCommentTriggeredClaimTask seeds a queued comment-triggered task whose
 // trigger comment is rooted under parentID (nil → trigger is itself a root).
 // Returns the task id and the trigger comment id.
-func createCommentTriggeredClaimTask(t *testing.T, ctx context.Context, agentID, runtimeID, issueID string, parentID *string) (string, string) {
+func createCommentTriggeredClaimTask(ctx context.Context, t *testing.T, agentID, runtimeID, issueID string, parentID *string) (string, string) {
 	t.Helper()
 	var commentID string
 	if err := testPool.QueryRow(ctx, `
@@ -4004,8 +4004,8 @@ func TestClaimTaskByRuntime_CommentTaskPopulatesNewCommentCount(t *testing.T) {
 		t.Skip("database not available")
 	}
 	ctx := context.Background()
-	runtimeID := createClaimReclaimRuntime(t, ctx, "Comment newcount runtime")
-	agentID, issueID := createClaimReclaimAgentAndIssue(t, ctx, runtimeID, "Comment newcount agent")
+	runtimeID := createClaimReclaimRuntime(ctx, t, "Comment newcount runtime")
+	agentID, issueID := createClaimReclaimAgentAndIssue(ctx, t, runtimeID, "Comment newcount agent")
 
 	// A prior run establishes the "since" anchor (its started_at, in the past).
 	var priorTaskID string
@@ -4050,7 +4050,7 @@ func TestClaimTaskByRuntime_CommentTaskPopulatesNewCommentCount(t *testing.T) {
 
 	// The trigger comment (member-authored, created now) lands after the anchor
 	// but is injected into the prompt, so it should not be counted.
-	_, triggerID := createCommentTriggeredClaimTask(t, ctx, agentID, runtimeID, issueID, &threadRootID)
+	_, triggerID := createCommentTriggeredClaimTask(ctx, t, agentID, runtimeID, issueID, &threadRootID)
 
 	resp := claimCommentTask(t, runtimeID, "comment-newcount-claim")
 	if resp.Task.TriggerCommentID != triggerID {
@@ -4076,9 +4076,9 @@ func TestClaimTaskByRuntime_CommentTaskPopulatesInitiator(t *testing.T) {
 		t.Skip("database not available")
 	}
 	ctx := context.Background()
-	runtimeID := createClaimReclaimRuntime(t, ctx, "Comment initiator runtime")
-	agentID, issueID := createClaimReclaimAgentAndIssue(t, ctx, runtimeID, "Comment initiator agent")
-	taskID, _ := createCommentTriggeredClaimTask(t, ctx, agentID, runtimeID, issueID, nil)
+	runtimeID := createClaimReclaimRuntime(ctx, t, "Comment initiator runtime")
+	agentID, issueID := createClaimReclaimAgentAndIssue(ctx, t, runtimeID, "Comment initiator agent")
+	taskID, _ := createCommentTriggeredClaimTask(ctx, t, agentID, runtimeID, issueID, nil)
 
 	w := httptest.NewRecorder()
 	req := newDaemonTokenRequest("POST", "/api/daemon/runtimes/"+runtimeID+"/tasks/claim", nil, testWorkspaceID, "comment-initiator-claim")
@@ -4121,8 +4121,8 @@ func TestClaimTaskByRuntime_CommentTaskOmitsDeltaWhenOnlyTriggerIsNew(t *testing
 		t.Skip("database not available")
 	}
 	ctx := context.Background()
-	runtimeID := createClaimReclaimRuntime(t, ctx, "Comment trigger-only runtime")
-	agentID, issueID := createClaimReclaimAgentAndIssue(t, ctx, runtimeID, "Comment trigger-only agent")
+	runtimeID := createClaimReclaimRuntime(ctx, t, "Comment trigger-only runtime")
+	agentID, issueID := createClaimReclaimAgentAndIssue(ctx, t, runtimeID, "Comment trigger-only agent")
 
 	var priorTaskID string
 	if err := testPool.QueryRow(ctx, `
@@ -4134,7 +4134,7 @@ func TestClaimTaskByRuntime_CommentTaskOmitsDeltaWhenOnlyTriggerIsNew(t *testing
 	}
 	t.Cleanup(func() { testPool.Exec(ctx, `DELETE FROM agent_task_queue WHERE id = $1`, priorTaskID) })
 
-	_, triggerID := createCommentTriggeredClaimTask(t, ctx, agentID, runtimeID, issueID, nil)
+	_, triggerID := createCommentTriggeredClaimTask(ctx, t, agentID, runtimeID, issueID, nil)
 
 	resp := claimCommentTask(t, runtimeID, "comment-trigger-only-claim")
 	if resp.Task.TriggerCommentID != triggerID {
@@ -4156,8 +4156,8 @@ func TestClaimTaskByRuntime_CommentResumeDefaultOn(t *testing.T) {
 		t.Skip("database not available")
 	}
 	ctx := context.Background()
-	runtimeID := createClaimReclaimRuntime(t, ctx, "Comment resume runtime")
-	agentID, issueID := createClaimReclaimAgentAndIssue(t, ctx, runtimeID, "Comment resume agent")
+	runtimeID := createClaimReclaimRuntime(ctx, t, "Comment resume runtime")
+	agentID, issueID := createClaimReclaimAgentAndIssue(ctx, t, runtimeID, "Comment resume agent")
 
 	// A prior completed task on the same (agent, issue, runtime) with a session.
 	const priorSession = "sess-prior-123"
@@ -4171,7 +4171,7 @@ func TestClaimTaskByRuntime_CommentResumeDefaultOn(t *testing.T) {
 	}
 	t.Cleanup(func() { testPool.Exec(ctx, `DELETE FROM agent_task_queue WHERE id = $1`, priorTaskID) })
 
-	createCommentTriggeredClaimTask(t, ctx, agentID, runtimeID, issueID, nil)
+	createCommentTriggeredClaimTask(ctx, t, agentID, runtimeID, issueID, nil)
 
 	resp := claimCommentTask(t, runtimeID, "comment-resume-default")
 	if resp.Task.PriorSessionID != priorSession {
