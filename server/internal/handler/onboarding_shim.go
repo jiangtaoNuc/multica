@@ -326,7 +326,7 @@ func (h *Handler) BootstrapOnboardingRuntime(w http.ResponseWriter, r *http.Requ
 			platform,
 		))
 		if h.shouldEnqueueAgentTask(r.Context(), issue) {
-			h.TaskService.EnqueueTaskForIssue(r.Context(), issue)
+			_, _ = h.TaskService.EnqueueTaskForIssue(r.Context(), issue)
 		}
 	}
 	if firstCompletion {

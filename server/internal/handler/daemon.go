@@ -2326,7 +2326,7 @@ func (h *Handler) ReportTaskMessages(w http.ResponseWriter, r *http.Request) {
 func taskMessageToPayload(m db.TaskMessage, taskID, issueID string) protocol.TaskMessagePayload {
 	var input map[string]any
 	if m.Input != nil {
-		json.Unmarshal(m.Input, &input)
+		_ = json.Unmarshal(m.Input, &input)
 	}
 	createdAt := ""
 	if m.CreatedAt.Valid {

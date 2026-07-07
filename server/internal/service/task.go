@@ -1992,7 +1992,7 @@ func (s *TaskService) notifyTaskAvailable(task db.AgentTaskQueue) {
 func (s *TaskService) broadcastTaskDispatch(ctx context.Context, task db.AgentTaskQueue) {
 	var payload map[string]any
 	if task.Context != nil {
-		json.Unmarshal(task.Context, &payload)
+		_ = json.Unmarshal(task.Context, &payload)
 	}
 	if payload == nil {
 		payload = map[string]any{}
@@ -2456,7 +2456,7 @@ func (s *TaskService) publishQuickCreateInbox(item db.InboxItem, workspaceID, ag
 func agentToMap(a db.Agent) map[string]any {
 	var rc any
 	if a.RuntimeConfig != nil {
-		json.Unmarshal(a.RuntimeConfig, &rc)
+		_ = json.Unmarshal(a.RuntimeConfig, &rc)
 	}
 	return map[string]any{
 		"id":                   util.UUIDToString(a.ID),

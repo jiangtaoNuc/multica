@@ -140,8 +140,8 @@ func TestDeleteAgentRuntime_StructuredConflict(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	runtimeID := createCascadeFixtureRuntime(t, ctx, "Cascade 409 Runtime")
-	agentID := createCascadeFixtureAgent(t, ctx, runtimeID, "Cascade 409 Agent")
+	runtimeID := createCascadeFixtureRuntime(ctx, t, "Cascade 409 Runtime")
+	agentID := createCascadeFixtureAgent(ctx, t, runtimeID, "Cascade 409 Agent")
 	_ = agentID
 
 	w := httptest.NewRecorder()
@@ -178,8 +178,8 @@ func TestArchiveAgentsAndDeleteRuntime_HappyPath(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	runtimeID := createCascadeFixtureRuntime(t, ctx, "Cascade Happy Runtime")
-	agentID := createCascadeFixtureAgent(t, ctx, runtimeID, "Cascade Happy Agent")
+	runtimeID := createCascadeFixtureRuntime(ctx, t, "Cascade Happy Runtime")
+	agentID := createCascadeFixtureAgent(ctx, t, runtimeID, "Cascade Happy Agent")
 
 	w := httptest.NewRecorder()
 	req := newRequest("POST", "/api/runtimes/"+runtimeID+"/archive-agents-and-delete",
@@ -220,9 +220,9 @@ func TestArchiveAgentsAndDeleteRuntime_PlanChanged(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	runtimeID := createCascadeFixtureRuntime(t, ctx, "Cascade Drift Runtime")
-	agent1 := createCascadeFixtureAgent(t, ctx, runtimeID, "Cascade Drift Agent A")
-	agent2 := createCascadeFixtureAgent(t, ctx, runtimeID, "Cascade Drift Agent B")
+	runtimeID := createCascadeFixtureRuntime(ctx, t, "Cascade Drift Runtime")
+	agent1 := createCascadeFixtureAgent(ctx, t, runtimeID, "Cascade Drift Agent A")
+	agent2 := createCascadeFixtureAgent(ctx, t, runtimeID, "Cascade Drift Agent B")
 
 	// User confirmed only agent1 — but the live set is {agent1, agent2}.
 	w := httptest.NewRecorder()
@@ -262,7 +262,7 @@ func TestArchiveAgentsAndDeleteRuntime_PlanChanged(t *testing.T) {
 // createCascadeFixtureRuntime creates a fresh runtime owned by testUserID
 // inside testWorkspaceID and registers cleanup. Each cascade test uses its
 // own runtime so the destructive paths don't trample the shared fixture.
-func createCascadeFixtureRuntime(t *testing.T, ctx context.Context, name string) string {
+func createCascadeFixtureRuntime(ctx context.Context, t *testing.T, name string) string {
 	t.Helper()
 	var runtimeID string
 	if err := testPool.QueryRow(ctx, `
@@ -285,7 +285,7 @@ func createCascadeFixtureRuntime(t *testing.T, ctx context.Context, name string)
 	return runtimeID
 }
 
-func createCascadeFixtureAgent(t *testing.T, ctx context.Context, runtimeID, name string) string {
+func createCascadeFixtureAgent(ctx context.Context, t *testing.T, runtimeID, name string) string {
 	t.Helper()
 	var agentID string
 	if err := testPool.QueryRow(ctx, `

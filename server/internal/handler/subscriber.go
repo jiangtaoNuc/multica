@@ -70,7 +70,7 @@ func (h *Handler) SubscribeToIssue(w http.ResponseWriter, r *http.Request) {
 		UserType *string `json:"user_type"`
 	}
 	if r.Body != nil {
-		json.NewDecoder(r.Body).Decode(&req)
+		_ = json.NewDecoder(r.Body).Decode(&req)
 	}
 	if req.UserID != nil && *req.UserID != "" {
 		targetUserID = *req.UserID
@@ -125,7 +125,7 @@ func (h *Handler) UnsubscribeFromIssue(w http.ResponseWriter, r *http.Request) {
 		UserType *string `json:"user_type"`
 	}
 	if r.Body != nil {
-		json.NewDecoder(r.Body).Decode(&req)
+		_ = json.NewDecoder(r.Body).Decode(&req)
 	}
 	if req.UserID != nil && *req.UserID != "" {
 		targetUserID = *req.UserID

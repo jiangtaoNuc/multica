@@ -110,7 +110,7 @@ func setHandlerTestWorkspaceRepos(t *testing.T, repos []map[string]string) {
 func newDaemonTokenRequest(method, path string, body any, workspaceID, daemonID string) *http.Request {
 	var buf bytes.Buffer
 	if body != nil {
-		json.NewEncoder(&buf).Encode(body)
+		_ = json.NewEncoder(&buf).Encode(body)
 	}
 	req := httptest.NewRequest(method, path, &buf)
 	req.Header.Set("Content-Type", "application/json")
@@ -511,7 +511,7 @@ func TestDaemonRegister_WithDaemonToken(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	runtimes, ok := resp["runtimes"].([]any)
 	if !ok || len(runtimes) == 0 {
 		t.Fatalf("DaemonRegister: expected runtimes in response, got %v", resp)
@@ -531,7 +531,7 @@ func TestDaemonRegister_RecordsRuntimeProfileRegistrationFailure(t *testing.T) {
 		t.Skip("database not available")
 	}
 	ctx := context.Background()
-	profileID := insertRuntimeProfileFixture(t, ctx, "Missing Custom Codex", "codex", "missing-codex")
+	profileID := insertRuntimeProfileFixture(ctx, t, "Missing Custom Codex", "codex", "missing-codex")
 
 	w := httptest.NewRecorder()
 	req := newDaemonTokenRequest("POST", "/api/daemon/register", map[string]any{
@@ -620,7 +620,7 @@ func TestDaemonHeartbeat_WithDaemonToken_CrossWorkspace(t *testing.T) {
 		t.Fatalf("Setup: DaemonRegister failed: %d: %s", w.Code, w.Body.String())
 	}
 	var regResp map[string]any
-	json.NewDecoder(w.Body).Decode(&regResp)
+	_ = json.NewDecoder(w.Body).Decode(&regResp)
 	runtimes := regResp["runtimes"].([]any)
 	runtimeID := runtimes[0].(map[string]any)["id"].(string)
 	defer testPool.Exec(context.Background(), `DELETE FROM agent_runtime WHERE id = $1`, runtimeID)
@@ -1567,7 +1567,7 @@ func TestDaemonRegister_MergesLegacyDaemonIDRuntime_ReverseDotLocal(t *testing.T
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	newRuntimeID := resp["runtimes"].([]any)[0].(map[string]any)["id"].(string)
 	t.Cleanup(func() {
 		testPool.Exec(context.Background(), `DELETE FROM agent_runtime WHERE id = $1`, newRuntimeID)
@@ -1625,7 +1625,7 @@ func TestDaemonRegister_MergesLegacyDaemonIDRuntime_CaseDrift(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	newRuntimeID := resp["runtimes"].([]any)[0].(map[string]any)["id"].(string)
 	t.Cleanup(func() {
 		testPool.Exec(context.Background(), `DELETE FROM agent_runtime WHERE id = $1`, newRuntimeID)
@@ -1721,7 +1721,7 @@ func TestDaemonRegister_MergesAllCaseDuplicateLegacyRuntimes(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	newRuntimeID := resp["runtimes"].([]any)[0].(map[string]any)["id"].(string)
 	t.Cleanup(func() {
 		testPool.Exec(context.Background(), `DELETE FROM agent_runtime WHERE id = $1`, newRuntimeID)
@@ -1778,7 +1778,7 @@ func TestDaemonRegister_LegacyIDNoMatchIsNoop(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	runtimeID := resp["runtimes"].([]any)[0].(map[string]any)["id"].(string)
 	t.Cleanup(func() {
 		testPool.Exec(context.Background(), `DELETE FROM agent_runtime WHERE id = $1`, runtimeID)

@@ -744,7 +744,7 @@ func fetchGitHubDefaultBranch(httpClient *http.Client, owner, repo string) strin
 	resp, err := doGitHubAPIGet(httpClient, apiURL)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		if resp != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 		return "main"
 	}
@@ -1090,7 +1090,7 @@ func fetchFromSkillsSh(httpClient *http.Client, rawURL string) (*importedSkill, 
 	if err != nil || dirResp.StatusCode != http.StatusOK {
 		// Can't list files — return what we have (SKILL.md only)
 		if dirResp != nil {
-			dirResp.Body.Close()
+			_ = dirResp.Body.Close()
 		}
 		return result, nil
 	}
@@ -1197,7 +1197,7 @@ func collectGitHubFiles(httpClient *http.Client, entries []githubContentEntry, o
 				attrs := []any{"url", subURL}
 				if subResp != nil {
 					attrs = append(attrs, "status", subResp.StatusCode)
-					subResp.Body.Close()
+					_ = subResp.Body.Close()
 				}
 				if err != nil {
 					attrs = append(attrs, "error", err)
@@ -1207,11 +1207,11 @@ func collectGitHubFiles(httpClient *http.Client, entries []githubContentEntry, o
 			}
 			var subEntries []githubContentEntry
 			if err := json.NewDecoder(subResp.Body).Decode(&subEntries); err != nil {
-				subResp.Body.Close()
+				_ = subResp.Body.Close()
 				slog.Warn("github import: failed to decode subdirectory listing", "url", subURL, "error", err)
 				continue
 			}
-			subResp.Body.Close()
+			_ = subResp.Body.Close()
 			collectGitHubFiles(httpClient, subEntries, out, subURL)
 		}
 	}
@@ -1289,7 +1289,7 @@ func collectGitHubSkillMdPaths(httpClient *http.Client, entries []githubContentE
 			attrs := []any{"url", subURL}
 			if subResp != nil {
 				attrs = append(attrs, "status", subResp.StatusCode)
-				subResp.Body.Close()
+				_ = subResp.Body.Close()
 			}
 			if err != nil {
 				attrs = append(attrs, "error", err)
@@ -1300,11 +1300,11 @@ func collectGitHubSkillMdPaths(httpClient *http.Client, entries []githubContentE
 
 		var subEntries []githubContentEntry
 		if err := json.NewDecoder(subResp.Body).Decode(&subEntries); err != nil {
-			subResp.Body.Close()
+			_ = subResp.Body.Close()
 			slog.Warn("github import: failed to decode skill metadata subdirectory", "url", subURL, "error", err)
 			continue
 		}
-		subResp.Body.Close()
+		_ = subResp.Body.Close()
 		collectGitHubSkillMdPaths(httpClient, subEntries, out, subURL)
 	}
 }
@@ -1656,7 +1656,7 @@ func fetchFromGitHub(httpClient *http.Client, rawURL string) (*importedSkill, er
 		// Keep this lenient: a private rate-limited request shouldn't fail
 		// an import that has already produced a valid SKILL.md.
 		if dirResp != nil {
-			dirResp.Body.Close()
+			_ = dirResp.Body.Close()
 		}
 		return result, nil
 	}
