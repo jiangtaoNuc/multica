@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -228,11 +229,11 @@ func webhookPathForToken(token string) string {
 func runToResponse(r db.AutopilotRun) AutopilotRunResponse {
 	var payload any
 	if r.TriggerPayload != nil {
-		json.Unmarshal(r.TriggerPayload, &payload)
+		_ = json.Unmarshal(r.TriggerPayload, &payload)
 	}
 	var result any
 	if r.Result != nil {
-		json.Unmarshal(r.Result, &result)
+		_ = json.Unmarshal(r.Result, &result)
 	}
 	return AutopilotRunResponse{
 		ID:             uuidToString(r.ID),
@@ -620,8 +621,7 @@ func (h *Handler) UpdateAutopilot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var rawFields map[string]json.RawMessage
-	json.Unmarshal(bodyBytes, &rawFields)
-
+	_ = json.Unmarshal(bodyBytes, &rawFields)
 	params := db.UpdateAutopilotParams{
 		ID:                 prev.ID,
 		Description:        prev.Description,
@@ -1426,16 +1426,16 @@ func (h *Handler) ListAutopilotRuns(w http.ResponseWriter, r *http.Request) {
 	limit := int32(20)
 	offset := int32(0)
 	if l := r.URL.Query().Get("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 {
-			limit = int32(v)
+		if v, err := strconv.Atoi(l); err == nil && v > 0 && v <= math.MaxInt32 {
+			limit = int32(v) //nolint:gosec // v is bounded by the check above.
 		}
 	}
 	if limit > 100 {
 		limit = 100
 	}
 	if o := r.URL.Query().Get("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
-			offset = int32(v)
+		if v, err := strconv.Atoi(o); err == nil && v >= 0 && v <= math.MaxInt32 {
+			offset = int32(v) //nolint:gosec // v is bounded by the check above.
 		}
 	}
 

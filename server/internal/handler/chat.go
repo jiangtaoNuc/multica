@@ -556,14 +556,14 @@ type ChatMessagesPageResponse struct {
 	NextCursor *ChatMessagesCursorResponse `json:"next_cursor,omitempty"`
 }
 
-func parseChatMessagesPageParams(r *http.Request) (int, pgtype.Timestamptz, pgtype.UUID, error) {
-	limit := 50
+func parseChatMessagesPageParams(r *http.Request) (int32, pgtype.Timestamptz, pgtype.UUID, error) {
+	limit := int32(50)
 	if raw := r.URL.Query().Get("limit"); raw != "" {
 		parsed, err := strconv.Atoi(raw)
 		if err != nil || parsed < 1 || parsed > 100 {
 			return 0, pgtype.Timestamptz{}, pgtype.UUID{}, errors.New("invalid limit")
 		}
-		limit = parsed
+		limit = int32(parsed) //nolint:gosec // parsed is bounded by the 1–100 check above.
 	}
 
 	rawBeforeCreatedAt := r.URL.Query().Get("before_created_at")
@@ -636,9 +636,10 @@ func (h *Handler) ListChatMessagesPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fetchLimit := limit + 1
 	messages, err := h.Queries.ListChatMessagesPage(r.Context(), db.ListChatMessagesPageParams{
 		ChatSessionID:   session.ID,
-		Limit:           int32(limit + 1),
+		Limit:           fetchLimit,
 		BeforeCreatedAt: beforeCreatedAt,
 		BeforeID:        beforeID,
 	})
@@ -646,9 +647,10 @@ func (h *Handler) ListChatMessagesPage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "failed to list chat messages")
 		return
 	}
-	hasMore := len(messages) > limit
+	limitInt := int(limit)
+	hasMore := len(messages) > limitInt
 	if hasMore {
-		messages = messages[:limit]
+		messages = messages[:limitInt]
 	}
 	var nextCursor *ChatMessagesCursorResponse
 	if hasMore && len(messages) > 0 {
@@ -677,7 +679,7 @@ func (h *Handler) ListChatMessagesPage(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, ChatMessagesPageResponse{
 		Messages:   resp,
-		Limit:      limit,
+		Limit:      int(limit),
 		HasMore:    hasMore,
 		NextCursor: nextCursor,
 	})

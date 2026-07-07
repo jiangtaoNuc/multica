@@ -307,7 +307,7 @@ func (h *Handler) ListComments(w http.ResponseWriter, r *http.Request) {
 		hasCursor = true
 	}
 
-	recentN := 0
+	recentN := int32(0)
 	if recentStr != "" {
 		n, err := strconv.Atoi(recentStr)
 		if err != nil || n <= 0 {
@@ -317,14 +317,14 @@ func (h *Handler) ListComments(w http.ResponseWriter, r *http.Request) {
 		if n > commentHardCap {
 			n = commentHardCap
 		}
-		recentN = n
+		recentN = int32(n) //nolint:gosec // n is bounded by commentHardCap (<= 2000).
 	}
 
 	// tail=0 is allowed (returns root only — useful for "what is this thread
 	// about" lookups without dragging any replies into context). Negative
 	// values are rejected because they'd round-trip to LIMIT -N which
 	// PostgreSQL flags as a syntax error.
-	threadTail := -1
+	threadTail := int32(-1)
 	threadTailSet := false
 	if tailStr != "" {
 		n, err := strconv.Atoi(tailStr)
@@ -335,7 +335,7 @@ func (h *Handler) ListComments(w http.ResponseWriter, r *http.Request) {
 		if n > commentHardCap {
 			n = commentHardCap
 		}
-		threadTail = n
+		threadTail = int32(n) //nolint:gosec // n is bounded by commentHardCap (<= 2000).
 		threadTailSet = true
 	}
 
@@ -422,9 +422,9 @@ type fetchCommentsArgs struct {
 	Since         pgtype.Timestamptz
 	RootsOnly     bool
 	ThreadAnchor  string
-	ThreadTail    int
+	ThreadTail    int32
 	ThreadTailSet bool
-	RecentN       int
+	RecentN       int32
 	HasCursor     bool
 	BeforeAt      pgtype.Timestamptz
 	BeforeID      pgtype.UUID
@@ -491,7 +491,7 @@ func (h *Handler) fetchCommentsForList(ctx context.Context, args fetchCommentsAr
 				HasCursor:   args.HasCursor,
 				BeforeAt:    args.BeforeAt,
 				BeforeID:    args.BeforeID,
-				ReplyLimit:  int32(args.ThreadTail) + 1,
+				ReplyLimit:  args.ThreadTail + 1,
 			})
 			if err != nil {
 				return fetchCommentsResult{}, err
@@ -532,7 +532,7 @@ func (h *Handler) fetchCommentsForList(ctx context.Context, args fetchCommentsAr
 			// emits ASC, so the extra row is the oldest reply — dropping
 			// it from the head is what aligns "newest N" with the user's
 			// request.
-			hasMore := len(replies) > args.ThreadTail
+			hasMore := len(replies) > int(args.ThreadTail)
 			if hasMore {
 				replies = replies[1:]
 			}
@@ -622,7 +622,7 @@ func (h *Handler) fetchCommentsForList(ctx context.Context, args fetchCommentsAr
 			HasCursor:   args.HasCursor,
 			BeforeAt:    args.BeforeAt,
 			BeforeID:    args.BeforeID,
-			ThreadLimit: int32(args.RecentN),
+			ThreadLimit: args.RecentN,
 		})
 		if err != nil {
 			return fetchCommentsResult{}, err
@@ -687,7 +687,7 @@ func (h *Handler) fetchCommentsForList(ctx context.Context, args fetchCommentsAr
 		// from fresher threads but the head thread is already past `since`.
 		// Flagged by Elon in #2787's second review (MUL-2340 nit).
 		out := fetchCommentsResult{Comments: comments}
-		emitCursor := len(seenRoot) >= args.RecentN && headRoot.Valid && headLast.Valid
+		emitCursor := len(seenRoot) >= int(args.RecentN) && headRoot.Valid && headLast.Valid
 		if emitCursor && args.Since.Valid && !headLast.Time.After(args.Since.Time) {
 			emitCursor = false
 		}

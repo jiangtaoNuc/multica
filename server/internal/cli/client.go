@@ -129,13 +129,13 @@ func APITimeout() time.Duration {
 	return AtLeastAPITimeout(0)
 }
 
-// AtLeastAPITimeout returns max(min, APITimeout()). Use it for commands that
+// AtLeastAPITimeout returns max(minimum, APITimeout()). Use it for commands that
 // need a larger floor than usual (for example file uploads, which historically
 // used a 60s budget).
-func AtLeastAPITimeout(min time.Duration) time.Duration {
+func AtLeastAPITimeout(minimum time.Duration) time.Duration {
 	budget := httpTimeout() + apiContextGrace
-	if min > budget {
-		return min
+	if minimum > budget {
+		return minimum
 	}
 	return budget
 }
