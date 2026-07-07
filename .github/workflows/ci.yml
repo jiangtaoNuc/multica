@@ -94,6 +94,12 @@ jobs:
       - name: Build
         run: cd server && go build ./...
 
+      - name: Lint (Go)
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v2.12.2
+          working-directory: server
+
       - name: Run migrations
         run: cd server && go run ./cmd/migrate up
 

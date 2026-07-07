@@ -318,6 +318,42 @@ CLI command fixtures under `server/cmd/multica` use `httptest.Server` playback
 tests and do not currently support `-update`; edit the JSON fixtures in
 `server/cmd/multica/testdata/cli_fixtures` directly when response shapes change.
 
+## Go Static Analysis
+
+The project uses [golangci-lint](https://golangci-lint.run/) to enforce a static-analysis baseline on the Go backend.
+
+### Install
+
+```bash
+# Use the official installer (matches the version pinned in .golangci.yml):
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+```
+
+### Run locally
+
+```bash
+make lint
+# or directly:
+cd server && golangci-lint run ./...
+```
+
+`make check` / `make check-main` / `make check-worktree` include this step automatically (via `scripts/check.sh`).
+
+### Configuration
+
+Rules are defined in `.golangci.yml` at the repository root.
+
+Active linters: `errcheck`, `gosec`, `govet`, `ineffassign`, `misspell`, `revive`, `staticcheck`, `unused`.
+Formatters (`gofmt`, `goimports`) are configured under the `formatters` key and run via `golangci-lint fmt`.
+
+When adding a `//nolint` directive, always include the linter name and a short reason:
+
+```go
+//nolint:gosec // G115: safe conversion — value is range-validated upstream
+```
+
+Large-scale blanket suppressions are not permitted; each suppression must be per-line.
+
 ## Local Codex Daemon
 
 Run the local daemon:
