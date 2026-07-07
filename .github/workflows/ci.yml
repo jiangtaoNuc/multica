@@ -100,6 +100,20 @@ jobs:
       - name: Test
         run: cd server && go test -race ./...
 
+      - name: SQLC drift
+        # Install sqlc, regenerate, and fail if generated code diverges from
+        # what is checked in. Ensures the repo's single source of truth
+        # (migrations/ → pkg/db/generated/) is always in sync.
+        run: |
+          go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+          cd server && sqlc generate
+          git diff --exit-code -- server/
+
+      - name: Migrate roundtrip
+        # Smoke-tests the last 10 migrations for down→up idempotency.
+        # Fails fast if any .down.sql is missing or the round-trip breaks.
+        run: bash scripts/migrate-roundtrip.sh
+
   installer:
     # Stub-driven shell tests for scripts/install.sh. Kept off the heavy
     # backend job so installer regressions surface independently, and
