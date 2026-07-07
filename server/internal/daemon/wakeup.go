@@ -176,7 +176,7 @@ func (d *Daemon) runWSWriter(conn *websocket.Conn, writes <-chan []byte, done ch
 			// Drain remaining frames so the producers don't block forever
 			// while waiting for runTaskWakeupConnection to close the channel.
 			for range writes {
-				// intentionally empty: drain the channel
+				_ = struct{}{} // intentionally empty: drain the channel
 			}
 			return
 		}
