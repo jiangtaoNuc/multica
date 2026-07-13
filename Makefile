@@ -1,4 +1,4 @@
-.PHONY: help makehelp dev server daemon cli multica build test migrate-up migrate-down sqlc seed clean setup start stop check worktree-env setup-main start-main stop-main check-main setup-worktree start-worktree stop-worktree check-worktree db-up db-down db-reset selfhost selfhost-build selfhost-stop
+.PHONY: help makehelp dev server daemon cli multica build test migrate-up migrate-down sqlc seed clean setup start stop check worktree-env setup-main start-main stop-main check-main setup-worktree start-worktree stop-worktree check-worktree db-up db-down db-reset selfhost selfhost-build selfhost-stop openapi-lint generate-api openapi-drift
 
 MAIN_ENV_FILE ?= .env
 WORKTREE_ENV_FILE ?= .env.worktree
@@ -313,6 +313,18 @@ migrate-down: ## Create the target DB if needed, then roll back database migrati
 
 sqlc: ## Regenerate sqlc code
 	cd server && sqlc generate
+
+##@ OpenAPI
+
+openapi-lint: ## Lint the OpenAPI spec with Redocly
+	npx @redocly/cli lint server/api/openapi.yaml
+
+generate-api: ## Regenerate TypeScript client types from openapi.yaml
+	pnpm run generate:api
+
+openapi-drift: ## Fail if generated TS types are out of sync with openapi.yaml
+	pnpm run generate:api
+	@git diff --exit-code -- packages/core/api/generated.ts
 
 # Cleanup
 ##@ Cleanup

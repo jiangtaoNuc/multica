@@ -1,0 +1,1846 @@
+openapi: 3.1.0
+
+info:
+  title: Multica REST API
+  version: 0.1.0
+  description: |
+    OpenAPI single source of truth for the Multica backend REST API.
+
+    First-batch coverage: `/api/issues/*`, `/api/comments/*`,
+    `/api/agents/*`, `/api/squads/*`.
+
+    All workspace-scoped routes require:
+      * `Authorization: Bearer <token>` — JWT or PAT (`mul_…` / `mcn_…`)
+      * `X-Workspace-ID` **or** `X-Workspace-Slug` — workspace context
+
+servers:
+  - url: /
+    description: Same-origin (browser) or via reverse proxy
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Issues
+  - name: Comments
+  - name: Agents
+  - name: Squads
+
+paths:
+  # ── Issues ────────────────────────────────────────────────────────────
+  /api/issues:
+    get:
+      tags: [Issues]
+      operationId: listIssues
+      summary: List issues in the current workspace
+      parameters:
+        - $ref: '#/components/parameters/StatusFilter'
+        - $ref: '#/components/parameters/AssigneeFilter'
+        - $ref: '#/components/parameters/SearchFilter'
+        - name: parent_issue_id
+          in: query
+          schema: { type: string }
+        - name: project_id
+          in: query
+          schema: { type: string }
+        - name: label_id
+          in: query
+          schema: { type: string }
+        - name: sort
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0 }
+      responses:
+        "200":
+          description: Issue list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/IssueResponse' }
+    post:
+      tags: [Issues]
+      operationId: createIssue
+      summary: Create a new issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateIssueRequest' }
+      responses:
+        "201":
+          description: Created issue
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IssueResponse' }
+        "409":
+          description: Duplicate issue detected
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/issues/search:
+    get:
+      tags: [Issues]
+      operationId: searchIssues
+      summary: Full-text search across issues
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/StatusFilter'
+        - $ref: '#/components/parameters/AssigneeFilter'
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SearchIssueResponse' }
+
+  /api/issues/grouped:
+    get:
+      tags: [Issues]
+      operationId: listGroupedIssues
+      summary: List issues grouped by assignee
+      parameters:
+        - $ref: '#/components/parameters/StatusFilter'
+        - name: project_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Grouped issues
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GroupedIssuesResponse' }
+
+  /api/issues/children:
+    get:
+      tags: [Issues]
+      operationId: listChildrenByParents
+      summary: List child issues for multiple parent IDs
+      parameters:
+        - name: parent_ids
+          in: query
+          required: true
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Child issues
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/IssueResponse' }
+
+  /api/issues/child-progress:
+    get:
+      tags: [Issues]
+      operationId: childIssueProgress
+      summary: Get child-issue progress for parent IDs
+      parameters:
+        - name: parent_ids
+          in: query
+          required: true
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Progress map
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /api/issues/quick-create:
+    post:
+      tags: [Issues]
+      operationId: quickCreateIssue
+      summary: Quick-create an issue and dispatch an agent task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/QuickCreateIssueRequest' }
+      responses:
+        "200":
+          description: Quick-create result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuickCreateIssueResponse' }
+
+  /api/issues/preview-trigger:
+    post:
+      tags: [Issues]
+      operationId: previewIssueTrigger
+      summary: Preview which triggers would fire for given issue changes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/IssueTriggerPreviewRequest' }
+      responses:
+        "200":
+          description: Trigger preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IssueTriggerPreviewResponse' }
+
+  /api/issues/batch-update:
+    post:
+      tags: [Issues]
+      operationId: batchUpdateIssues
+      summary: Update multiple issues at once
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BatchUpdateIssuesRequest' }
+      responses:
+        "200":
+          description: Batch update result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated: { type: integer }
+
+  /api/issues/batch-delete:
+    post:
+      tags: [Issues]
+      operationId: batchDeleteIssues
+      summary: Delete multiple issues at once
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BatchDeleteIssuesRequest' }
+      responses:
+        "200":
+          description: Batch delete result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: integer }
+
+  /api/issues/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    get:
+      tags: [Issues]
+      operationId: getIssue
+      summary: Get a single issue
+      responses:
+        "200":
+          description: Issue detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IssueResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Issues]
+      operationId: updateIssue
+      summary: Update an issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateIssueRequest' }
+      responses:
+        "200":
+          description: Updated issue
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IssueResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Issues]
+      operationId: deleteIssue
+      summary: Delete an issue
+      responses:
+        "204":
+          description: Deleted
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  /api/issues/{id}/comments:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    get:
+      tags: [Issues, Comments]
+      operationId: listComments
+      summary: List comments on an issue
+      parameters:
+        - name: parent_id
+          in: query
+          schema: { type: string }
+        - name: roots_only
+          in: query
+          schema: { type: boolean }
+        - name: summary
+          in: query
+          schema: { type: boolean }
+        - name: limit
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Comment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CommentResponse' }
+    post:
+      tags: [Issues, Comments]
+      operationId: createComment
+      summary: Create a comment on an issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCommentRequest' }
+      responses:
+        "201":
+          description: Created comment
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommentResponse' }
+
+  /api/issues/{id}/comments/trigger-preview:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    post:
+      tags: [Issues, Comments]
+      operationId: previewCommentTriggers
+      summary: Preview which agents would be triggered by a comment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CommentTriggerPreviewRequest' }
+      responses:
+        "200":
+          description: Trigger preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommentTriggerPreviewResponse' }
+
+  /api/issues/{id}/timeline:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    get:
+      tags: [Issues]
+      operationId: listTimeline
+      summary: List timeline entries for an issue
+      responses:
+        "200":
+          description: Timeline entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+  /api/issues/{id}/subscribers:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    get:
+      tags: [Issues]
+      operationId: listIssueSubscribers
+      summary: List subscribers for an issue
+      responses:
+        "200":
+          description: Subscriber list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SubscriberResponse' }
+
+  /api/issues/{id}/subscribe:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    post:
+      tags: [Issues]
+      operationId: subscribeToIssue
+      summary: Subscribe a user to an issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id: { type: string }
+                user_type: { type: string }
+              required: [user_id, user_type]
+      responses:
+        "200":
+          description: Already subscribed
+        "201":
+          description: Subscribed
+
+  /api/issues/{id}/unsubscribe:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    post:
+      tags: [Issues]
+      operationId: unsubscribeFromIssue
+      summary: Unsubscribe a user from an issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id: { type: string }
+                user_type: { type: string }
+              required: [user_id, user_type]
+      responses:
+        "204":
+          description: Unsubscribed
+
+  /api/issues/{id}/active-task:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    get:
+      tags: [Issues]
+      operationId: getActiveTaskForIssue
+      summary: Get the active task for an issue
+      responses:
+        "200":
+          description: Active tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items: { $ref: '#/components/schemas/AgentTaskResponse' }
+
+  /api/issues/{id}/tasks/{taskId}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+      - name: taskId
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Issues]
+      operationId: cancelTask
+      summary: Cancel a task on an issue
+      responses:
+        "200":
+          description: Cancelled
+
+  /api/issues/{id}/rerun:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    post:
+      tags: [Issues]
+      operationId: rerunIssue
+      summary: Re-run an issue's agent task
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RerunIssueRequest' }
+      responses:
+        "200":
+          description: Re-run started
+
+  /api/issues/{id}/task-runs:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    get:
+      tags: [Issues]
+      operationId: listTasksByIssue
+      summary: List task runs for an issue
+      responses:
+        "200":
+          description: Task runs
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AgentTaskResponse' }
+
+  /api/issues/{id}/usage:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    get:
+      tags: [Issues]
+      operationId: getIssueUsage
+      summary: Get token usage for an issue
+      responses:
+        "200":
+          description: Usage data
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /api/issues/{id}/reactions:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    post:
+      tags: [Issues]
+      operationId: addIssueReaction
+      summary: Add a reaction to an issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emoji: { type: string }
+              required: [emoji]
+      responses:
+        "201":
+          description: Reaction added
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IssueReactionResponse' }
+    delete:
+      tags: [Issues]
+      operationId: removeIssueReaction
+      summary: Remove a reaction from an issue
+      parameters:
+        - name: emoji
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Removed
+
+  /api/issues/{id}/attachments:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    get:
+      tags: [Issues]
+      operationId: listAttachments
+      summary: List attachments for an issue
+      responses:
+        "200":
+          description: Attachment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AttachmentResponse' }
+
+  /api/issues/{id}/children:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    get:
+      tags: [Issues]
+      operationId: listChildIssues
+      summary: List child issues
+      responses:
+        "200":
+          description: Child issues
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/IssueResponse' }
+
+  /api/issues/{id}/labels:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    get:
+      tags: [Issues]
+      operationId: listLabelsForIssue
+      summary: List labels attached to an issue
+      responses:
+        "200":
+          description: Labels
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/LabelResponse' }
+    post:
+      tags: [Issues]
+      operationId: attachLabel
+      summary: Attach a label to an issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AttachLabelRequest' }
+      responses:
+        "200":
+          description: Label attached
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LabelResponse' }
+
+  /api/issues/{id}/labels/{labelId}:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+      - name: labelId
+        in: path
+        required: true
+        schema: { type: string }
+    delete:
+      tags: [Issues]
+      operationId: detachLabel
+      summary: Detach a label from an issue
+      responses:
+        "204":
+          description: Detached
+
+  /api/issues/{id}/metadata:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    get:
+      tags: [Issues]
+      operationId: listIssueMetadata
+      summary: List metadata key-value pairs for an issue
+      responses:
+        "200":
+          description: Metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metadata:
+                    type: object
+                    additionalProperties: true
+
+  /api/issues/{id}/metadata/{key}:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+      - name: key
+        in: path
+        required: true
+        schema: { type: string }
+    put:
+      tags: [Issues]
+      operationId: setIssueMetadataKey
+      summary: Set a metadata key on an issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetIssueMetadataKeyRequest' }
+      responses:
+        "200":
+          description: Metadata key set
+    delete:
+      tags: [Issues]
+      operationId: deleteIssueMetadataKey
+      summary: Delete a metadata key from an issue
+      responses:
+        "204":
+          description: Deleted
+
+  /api/issues/{id}/pull-requests:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    get:
+      tags: [Issues]
+      operationId: listPullRequestsForIssue
+      summary: List GitHub pull requests linked to an issue
+      responses:
+        "200":
+          description: Pull requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pull_requests:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+
+  /api/issues/{id}/squad-evaluated:
+    parameters:
+      - $ref: '#/components/parameters/IssueId'
+    post:
+      tags: [Issues, Squads]
+      operationId: recordSquadLeaderEvaluation
+      summary: Record a squad leader evaluation outcome
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                outcome: { type: string }
+                reason: { type: string }
+              required: [outcome]
+      responses:
+        "201":
+          description: Recorded
+
+  # ── Comments ──────────────────────────────────────────────────────────
+  /api/comments/{commentId}:
+    parameters:
+      - $ref: '#/components/parameters/CommentId'
+    put:
+      tags: [Comments]
+      operationId: updateComment
+      summary: Update a comment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateCommentRequest' }
+      responses:
+        "200":
+          description: Updated comment
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommentResponse' }
+    delete:
+      tags: [Comments]
+      operationId: deleteComment
+      summary: Delete a comment
+      responses:
+        "204":
+          description: Deleted
+
+  /api/comments/{commentId}/resolve:
+    parameters:
+      - $ref: '#/components/parameters/CommentId'
+    post:
+      tags: [Comments]
+      operationId: resolveComment
+      summary: Resolve a comment
+      responses:
+        "200":
+          description: Resolved comment
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommentResponse' }
+    delete:
+      tags: [Comments]
+      operationId: unresolveComment
+      summary: Unresolve a comment
+      responses:
+        "200":
+          description: Unresolved comment
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommentResponse' }
+
+  /api/comments/{commentId}/reactions:
+    parameters:
+      - $ref: '#/components/parameters/CommentId'
+    post:
+      tags: [Comments]
+      operationId: addReaction
+      summary: Add a reaction to a comment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emoji: { type: string }
+              required: [emoji]
+      responses:
+        "201":
+          description: Reaction added
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReactionResponse' }
+    delete:
+      tags: [Comments]
+      operationId: removeReaction
+      summary: Remove a reaction from a comment
+      parameters:
+        - name: emoji
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Removed
+
+  # ── Agents ────────────────────────────────────────────────────────────
+  /api/agents:
+    get:
+      tags: [Agents]
+      operationId: listAgents
+      summary: List agents in the current workspace
+      parameters:
+        - name: include_archived
+          in: query
+          schema: { type: boolean }
+        - name: runtime_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Agent list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AgentResponse' }
+    post:
+      tags: [Agents]
+      operationId: createAgent
+      summary: Create a new agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAgentRequest' }
+      responses:
+        "201":
+          description: Created agent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgentResponse' }
+
+  /api/agents/from-template:
+    post:
+      tags: [Agents]
+      operationId: createAgentFromTemplate
+      summary: Create an agent from a template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAgentFromTemplateRequest' }
+      responses:
+        "201":
+          description: Created agent from template
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgentResponse' }
+
+  /api/agents/{id}:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+    get:
+      tags: [Agents]
+      operationId: getAgent
+      summary: Get a single agent
+      responses:
+        "200":
+          description: Agent detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgentResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Agents]
+      operationId: updateAgent
+      summary: Update an agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateAgentRequest' }
+      responses:
+        "200":
+          description: Updated agent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgentResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  /api/agents/{id}/archive:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+    post:
+      tags: [Agents]
+      operationId: archiveAgent
+      summary: Archive an agent
+      responses:
+        "200":
+          description: Archived agent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgentResponse' }
+
+  /api/agents/{id}/restore:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+    post:
+      tags: [Agents]
+      operationId: restoreAgent
+      summary: Restore an archived agent
+      responses:
+        "200":
+          description: Restored agent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgentResponse' }
+
+  /api/agents/{id}/cancel-tasks:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+    post:
+      tags: [Agents]
+      operationId: cancelAgentTasks
+      summary: Cancel all active tasks for an agent
+      responses:
+        "200":
+          description: Cancellation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cancelled: { type: integer }
+
+  /api/agents/{id}/tasks:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+    get:
+      tags: [Agents]
+      operationId: listAgentTasks
+      summary: List tasks for an agent
+      responses:
+        "200":
+          description: Task list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AgentTaskResponse' }
+
+  /api/agents/{id}/skills:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+    get:
+      tags: [Agents]
+      operationId: listAgentSkills
+      summary: List skills attached to an agent
+      responses:
+        "200":
+          description: Skill list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SkillSummaryResponse' }
+    put:
+      tags: [Agents]
+      operationId: setAgentSkills
+      summary: Replace the full set of skills attached to an agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetAgentSkillsRequest' }
+      responses:
+        "200":
+          description: Skills set
+
+  /api/agents/{id}/skills/add:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+    post:
+      tags: [Agents]
+      operationId: addAgentSkills
+      summary: Add skills to an agent (idempotent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddAgentSkillsRequest' }
+      responses:
+        "200":
+          description: Skills added
+
+  /api/agents/{id}/env:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+    get:
+      tags: [Agents]
+      operationId: getAgentEnv
+      summary: Get custom environment variables for an agent
+      responses:
+        "200":
+          description: Agent env
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgentEnvResponse' }
+    put:
+      tags: [Agents]
+      operationId: updateAgentEnv
+      summary: Update custom environment variables for an agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateAgentEnvRequest' }
+      responses:
+        "200":
+          description: Updated agent env
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgentEnvResponse' }
+
+  # ── Squads ────────────────────────────────────────────────────────────
+  /api/squads:
+    get:
+      tags: [Squads]
+      operationId: listSquads
+      summary: List squads in the current workspace
+      responses:
+        "200":
+          description: Squad list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SquadResponse' }
+    post:
+      tags: [Squads]
+      operationId: createSquad
+      summary: Create a new squad
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateSquadRequest' }
+      responses:
+        "201":
+          description: Created squad
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SquadResponse' }
+
+  /api/squads/{id}:
+    parameters:
+      - $ref: '#/components/parameters/SquadId'
+    get:
+      tags: [Squads]
+      operationId: getSquad
+      summary: Get a single squad
+      responses:
+        "200":
+          description: Squad detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SquadResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Squads]
+      operationId: updateSquad
+      summary: Update a squad
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateSquadRequest' }
+      responses:
+        "200":
+          description: Updated squad
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SquadResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Squads]
+      operationId: deleteSquad
+      summary: Delete a squad
+      responses:
+        "204":
+          description: Deleted
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  /api/squads/{id}/members:
+    parameters:
+      - $ref: '#/components/parameters/SquadId'
+    get:
+      tags: [Squads]
+      operationId: listSquadMembers
+      summary: List members of a squad
+      responses:
+        "200":
+          description: Member list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SquadMemberResponse' }
+    post:
+      tags: [Squads]
+      operationId: addSquadMember
+      summary: Add a member to a squad
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddSquadMemberRequest' }
+      responses:
+        "201":
+          description: Member added
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SquadMemberResponse' }
+    delete:
+      tags: [Squads]
+      operationId: removeSquadMember
+      summary: Remove a member from a squad
+      parameters:
+        - name: member_type
+          in: query
+          required: true
+          schema: { type: string }
+        - name: member_id
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Removed
+
+  /api/squads/{id}/members/status:
+    parameters:
+      - $ref: '#/components/parameters/SquadId'
+    get:
+      tags: [Squads]
+      operationId: listSquadMemberStatus
+      summary: List squad members with presence/status info
+      responses:
+        "200":
+          description: Member status list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SquadMemberStatusListResponse' }
+
+  /api/squads/{id}/members/role:
+    parameters:
+      - $ref: '#/components/parameters/SquadId'
+    patch:
+      tags: [Squads]
+      operationId: updateSquadMemberRole
+      summary: Update a squad member's role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateSquadMemberRoleRequest' }
+      responses:
+        "200":
+          description: Updated member
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SquadMemberResponse' }
+
+# ── Components ───────────────────────────────────────────────────────────
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    IssueId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    CommentId:
+      name: commentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AgentId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    SquadId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    StatusFilter:
+      name: status
+      in: query
+      schema: { type: string }
+    AssigneeFilter:
+      name: assignee_id
+      in: query
+      schema: { type: string }
+    SearchFilter:
+      name: search
+      in: query
+      schema: { type: string }
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+      required: [error]
+
+    # ── Issue schemas ──────────────────────────────────────────────────
+    IssueResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        workspace_id: { type: string, format: uuid }
+        number: { type: integer }
+        identifier: { type: string }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        status: { type: string }
+        priority: { type: string }
+        assignee_type: { type: string, nullable: true }
+        assignee_id: { type: string, nullable: true }
+        creator_type: { type: string }
+        creator_id: { type: string, format: uuid }
+        parent_issue_id: { type: string, nullable: true }
+        project_id: { type: string, nullable: true }
+        position: { type: number }
+        stage: { type: integer, nullable: true }
+        start_date: { type: string, nullable: true }
+        due_date: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        metadata:
+          type: object
+          additionalProperties: true
+        reactions:
+          type: array
+          items: { $ref: '#/components/schemas/IssueReactionResponse' }
+        attachments:
+          type: array
+          items: { $ref: '#/components/schemas/AttachmentResponse' }
+        labels:
+          type: array
+          items: { $ref: '#/components/schemas/LabelResponse' }
+      required: [id, workspace_id, number, identifier, title, status, priority, creator_type, creator_id, position, created_at, updated_at, metadata]
+
+    SearchIssueResponse:
+      allOf:
+        - $ref: '#/components/schemas/IssueResponse'
+        - type: object
+          properties:
+            match_source: { type: string }
+            matched_snippet: { type: string, nullable: true }
+            matched_description_snippet: { type: string, nullable: true }
+            matched_comment_snippet: { type: string, nullable: true }
+          required: [match_source]
+
+    GroupedIssuesResponse:
+      type: object
+      properties:
+        groups:
+          type: array
+          items: { $ref: '#/components/schemas/IssueAssigneeGroupResponse' }
+      required: [groups]
+
+    IssueAssigneeGroupResponse:
+      type: object
+      properties:
+        assignee_type: { type: string, nullable: true }
+        assignee_id: { type: string, nullable: true }
+        total: { type: integer }
+        issues:
+          type: array
+          items: { $ref: '#/components/schemas/IssueResponse' }
+      required: [total, issues]
+
+    CreateIssueRequest:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string, nullable: true }
+        status: { type: string }
+        priority: { type: string }
+        assignee_type: { type: string, nullable: true }
+        assignee_id: { type: string, nullable: true }
+        parent_issue_id: { type: string, nullable: true }
+        project_id: { type: string, nullable: true }
+        stage: { type: integer, nullable: true }
+        start_date: { type: string, nullable: true }
+        due_date: { type: string, nullable: true }
+        attachment_ids:
+          type: array
+          items: { type: string }
+        origin_type: { type: string, nullable: true }
+        origin_id: { type: string, nullable: true }
+        allow_duplicate: { type: boolean }
+      required: [title]
+
+    UpdateIssueRequest:
+      type: object
+      properties:
+        title: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        status: { type: string, nullable: true }
+        priority: { type: string, nullable: true }
+        assignee_type: { type: string, nullable: true }
+        assignee_id: { type: string, nullable: true }
+        position: { type: number, nullable: true }
+        start_date: { type: string, nullable: true }
+        due_date: { type: string, nullable: true }
+        parent_issue_id: { type: string, nullable: true }
+        project_id: { type: string, nullable: true }
+        stage: { type: integer, nullable: true }
+        attachment_ids:
+          type: array
+          items: { type: string }
+        suppress_run: { type: boolean }
+        handoff_note: { type: string }
+
+    QuickCreateIssueRequest:
+      type: object
+      properties:
+        agent_id: { type: string }
+        squad_id: { type: string }
+        prompt: { type: string }
+        project_id: { type: string }
+        parent_issue_id: { type: string }
+        attachment_ids:
+          type: array
+          items: { type: string }
+      required: [prompt]
+
+    QuickCreateIssueResponse:
+      type: object
+      properties:
+        task_id: { type: string, format: uuid }
+        issue:
+          $ref: '#/components/schemas/IssueResponse'
+      required: [task_id]
+
+    BatchUpdateIssuesRequest:
+      type: object
+      properties:
+        issue_ids:
+          type: array
+          items: { type: string }
+        updates: { $ref: '#/components/schemas/UpdateIssueRequest' }
+      required: [issue_ids, updates]
+
+    BatchDeleteIssuesRequest:
+      type: object
+      properties:
+        issue_ids:
+          type: array
+          items: { type: string }
+      required: [issue_ids]
+
+    IssueTriggerPreviewRequest:
+      type: object
+      properties:
+        issue_ids:
+          type: array
+          items: { type: string }
+        is_create: { type: boolean }
+        assignee_type: { type: string }
+        assignee_id: { type: string }
+        status: { type: string }
+
+    IssueTriggerPreviewResponse:
+      type: object
+      properties:
+        triggers:
+          type: array
+          items: { $ref: '#/components/schemas/IssueTriggerPreviewItem' }
+        total_count: { type: integer }
+      required: [triggers, total_count]
+
+    IssueTriggerPreviewItem:
+      type: object
+      properties:
+        issue_id: { type: string }
+        agent_id: { type: string }
+        agent_name: { type: string }
+        trigger_source: { type: string }
+
+    RerunIssueRequest:
+      type: object
+      properties:
+        task_id: { type: string }
+
+    SetIssueMetadataKeyRequest:
+      type: object
+      properties:
+        value: {}
+      required: [value]
+
+    AttachLabelRequest:
+      type: object
+      properties:
+        label_id: { type: string, format: uuid }
+      required: [label_id]
+
+    IssueReactionResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        issue_id: { type: string, format: uuid }
+        actor_type: { type: string }
+        actor_id: { type: string, format: uuid }
+        emoji: { type: string }
+        created_at: { type: string, format: date-time }
+      required: [id, issue_id, actor_type, actor_id, emoji, created_at]
+
+    SubscriberResponse:
+      type: object
+      properties:
+        issue_id: { type: string, format: uuid }
+        user_type: { type: string }
+        user_id: { type: string, format: uuid }
+        reason: { type: string }
+        created_at: { type: string, format: date-time }
+      required: [issue_id, user_type, user_id, reason, created_at]
+
+    LabelResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        workspace_id: { type: string, format: uuid }
+        name: { type: string }
+        color: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+      required: [id, workspace_id, name, color, created_at, updated_at]
+
+    AttachmentResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        workspace_id: { type: string, format: uuid }
+        issue_id: { type: string, nullable: true }
+        comment_id: { type: string, nullable: true }
+        chat_session_id: { type: string, nullable: true }
+        chat_message_id: { type: string, nullable: true }
+        uploader_type: { type: string }
+        uploader_id: { type: string, format: uuid }
+        filename: { type: string }
+        content_type: { type: string }
+        size: { type: integer }
+        created_at: { type: string, format: date-time }
+      required: [id, workspace_id, uploader_type, uploader_id, filename, content_type, size, created_at]
+
+    # ── Comment schemas ────────────────────────────────────────────────
+    CommentResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        issue_id: { type: string, format: uuid }
+        author_type: { type: string }
+        author_id: { type: string, format: uuid }
+        content: { type: string }
+        type: { type: string }
+        parent_id: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        resolved_at: { type: string, nullable: true }
+        resolved_by_type: { type: string, nullable: true }
+        resolved_by_id: { type: string, nullable: true }
+        source_task_id: { type: string, nullable: true }
+        reactions:
+          type: array
+          items: { $ref: '#/components/schemas/ReactionResponse' }
+        attachments:
+          type: array
+          items: { $ref: '#/components/schemas/AttachmentResponse' }
+        reply_count: { type: integer, nullable: true }
+        last_activity_at: { type: string, nullable: true }
+        content_truncated: { type: boolean, nullable: true }
+      required: [id, issue_id, author_type, author_id, content, type, created_at, updated_at, reactions, attachments]
+
+    CreateCommentRequest:
+      type: object
+      properties:
+        content: { type: string }
+        type: { type: string }
+        parent_id: { type: string, nullable: true }
+        attachment_ids:
+          type: array
+          items: { type: string }
+        suppress_agent_ids:
+          type: array
+          items: { type: string }
+      required: [content, type]
+
+    UpdateCommentRequest:
+      type: object
+      properties:
+        content: { type: string }
+        attachment_ids:
+          type: array
+          items: { type: string }
+        suppress_agent_ids:
+          type: array
+          items: { type: string }
+
+    CommentTriggerPreviewRequest:
+      type: object
+      properties:
+        content: { type: string }
+        parent_id: { type: string, nullable: true }
+        editing_comment_id: { type: string, nullable: true }
+      required: [content]
+
+    CommentTriggerPreviewResponse:
+      type: object
+      properties:
+        agents:
+          type: array
+          items: { $ref: '#/components/schemas/CommentTriggerAgentResponse' }
+      required: [agents]
+
+    CommentTriggerAgentResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        avatar_url: { type: string, nullable: true }
+        source: { type: string }
+        reason: { type: string }
+      required: [id, name, source, reason]
+
+    ReactionResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        comment_id: { type: string, format: uuid }
+        actor_type: { type: string }
+        actor_id: { type: string, format: uuid }
+        emoji: { type: string }
+        created_at: { type: string, format: date-time }
+      required: [id, comment_id, actor_type, actor_id, emoji, created_at]
+
+    # ── Agent schemas ──────────────────────────────────────────────────
+    AgentResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        workspace_id: { type: string, format: uuid }
+        runtime_id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        instructions: { type: string }
+        avatar_url: { type: string, nullable: true }
+        runtime_mode: { type: string }
+        runtime_config: {}
+        custom_args:
+          type: array
+          items: { type: string }
+        mcp_config: {}
+        has_custom_env: { type: boolean }
+        custom_env_key_count: { type: integer }
+        mcp_config_redacted: { type: boolean }
+        visibility: { type: string }
+        status: { type: string }
+        max_concurrent_tasks: { type: integer }
+        model: { type: string }
+        thinking_level: { type: string }
+        owner_id: { type: string, nullable: true }
+        skills:
+          type: array
+          items: { $ref: '#/components/schemas/AgentSkillSummary' }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        archived_at: { type: string, nullable: true }
+        archived_by: { type: string, nullable: true }
+      required: [id, workspace_id, runtime_id, name, description, instructions, runtime_mode, runtime_config, custom_args, mcp_config, has_custom_env, custom_env_key_count, mcp_config_redacted, visibility, status, max_concurrent_tasks, model, thinking_level, skills, created_at, updated_at]
+
+    CreateAgentRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        instructions: { type: string }
+        avatar_url: { type: string, nullable: true }
+        runtime_id: { type: string, format: uuid }
+        runtime_config: {}
+        custom_env:
+          type: object
+          additionalProperties: { type: string }
+        custom_args:
+          type: array
+          items: { type: string }
+        mcp_config: {}
+        visibility: { type: string }
+        max_concurrent_tasks: { type: integer }
+        model: { type: string }
+        thinking_level: { type: string }
+        template: { type: string }
+      required: [name, runtime_id, model]
+
+    UpdateAgentRequest:
+      type: object
+      properties:
+        name: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        instructions: { type: string, nullable: true }
+        avatar_url: { type: string, nullable: true }
+        runtime_id: { type: string, nullable: true }
+        runtime_config: {}
+        custom_args:
+          type: array
+          items: { type: string }
+        mcp_config: {}
+        visibility: { type: string, nullable: true }
+        status: { type: string, nullable: true }
+        max_concurrent_tasks: { type: integer, nullable: true }
+        model: { type: string, nullable: true }
+        thinking_level: { type: string, nullable: true }
+
+    CreateAgentFromTemplateRequest:
+      type: object
+      properties:
+        template_slug: { type: string }
+        name: { type: string }
+        runtime_id: { type: string, format: uuid }
+        model: { type: string }
+        visibility: { type: string }
+        max_concurrent_tasks: { type: integer }
+        description: { type: string, nullable: true }
+        instructions: { type: string, nullable: true }
+        avatar_url: { type: string, nullable: true }
+        extra_skill_ids:
+          type: array
+          items: { type: string }
+      required: [template_slug, name, runtime_id]
+
+    AgentSkillSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+      required: [id, name, description]
+
+    SkillSummaryResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        workspace_id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        config: {}
+        created_by: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+      required: [id, workspace_id, name, description, config, created_at, updated_at]
+
+    SetAgentSkillsRequest:
+      type: object
+      properties:
+        skill_ids:
+          type: array
+          items: { type: string }
+      required: [skill_ids]
+
+    AddAgentSkillsRequest:
+      type: object
+      properties:
+        skill_ids:
+          type: array
+          items: { type: string }
+      required: [skill_ids]
+
+    AgentEnvResponse:
+      type: object
+      properties:
+        agent_id: { type: string, format: uuid }
+        custom_env:
+          type: object
+          additionalProperties: { type: string }
+      required: [agent_id, custom_env]
+
+    UpdateAgentEnvRequest:
+      type: object
+      properties:
+        custom_env:
+          type: object
+          additionalProperties: { type: string }
+      required: [custom_env]
+
+    AgentTaskResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        agent_id: { type: string, format: uuid }
+        runtime_id: { type: string, format: uuid }
+        issue_id: { type: string, format: uuid, nullable: true }
+        workspace_id: { type: string, format: uuid }
+        workspace_context: { type: string }
+        thread_name: { type: string }
+        status: { type: string }
+        priority: { type: string }
+        dispatched_at: { type: string, format: date-time, nullable: true }
+        started_at: { type: string, format: date-time, nullable: true }
+        completed_at: { type: string, format: date-time, nullable: true }
+        result: { type: string, nullable: true }
+        error: { type: string, nullable: true }
+        failure_reason: { type: string, nullable: true }
+        attempt: { type: integer }
+        max_attempts: { type: integer }
+        parent_task_id: { type: string, nullable: true }
+        agent:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+            avatar_url: { type: string, nullable: true }
+        repos:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        project_id: { type: string, nullable: true }
+        project_title: { type: string, nullable: true }
+        project_description: { type: string, nullable: true }
+        project_resources:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        created_at: { type: string, format: date-time }
+      required: [id, agent_id, runtime_id, workspace_id, status, priority, attempt, max_attempts, created_at]
+
+    # ── Squad schemas ──────────────────────────────────────────────────
+    SquadResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        workspace_id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        instructions: { type: string }
+        avatar_url: { type: string, nullable: true }
+        leader_id: { type: string, format: uuid }
+        creator_id: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        archived_at: { type: string, nullable: true }
+        archived_by: { type: string, nullable: true }
+        member_count: { type: integer }
+        member_preview:
+          type: array
+          items: { $ref: '#/components/schemas/SquadMemberPreviewResponse' }
+      required: [id, workspace_id, name, description, instructions, leader_id, creator_id, created_at, updated_at, member_count, member_preview]
+
+    CreateSquadRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        leader_id: { type: string, format: uuid }
+        avatar_url: { type: string, nullable: true }
+      required: [name]
+
+    UpdateSquadRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        instructions: { type: string }
+        leader_id: { type: string, format: uuid }
+        avatar_url: { type: string, nullable: true }
+
+    SquadMemberPreviewResponse:
+      type: object
+      properties:
+        member_type: { type: string }
+        member_id: { type: string, format: uuid }
+        role: { type: string }
+      required: [member_type, member_id, role]
+
+    SquadMemberResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        squad_id: { type: string, format: uuid }
+        member_type: { type: string }
+        member_id: { type: string, format: uuid }
+        role: { type: string }
+        created_at: { type: string, format: date-time }
+      required: [id, squad_id, member_type, member_id, role, created_at]
+
+    AddSquadMemberRequest:
+      type: object
+      properties:
+        member_type: { type: string }
+        member_id: { type: string, format: uuid }
+        role: { type: string }
+      required: [member_type, member_id, role]
+
+    UpdateSquadMemberRoleRequest:
+      type: object
+      properties:
+        member_type: { type: string }
+        member_id: { type: string, format: uuid }
+        role: { type: string }
+      required: [member_type, member_id, role]
+
+    SquadMemberStatusResponse:
+      type: object
+      properties:
+        member_type: { type: string }
+        member_id: { type: string, format: uuid }
+        status: { type: string, nullable: true }
+        active_issues:
+          type: array
+          items: { $ref: '#/components/schemas/SquadActiveIssueBrief' }
+        last_active_at: { type: string, nullable: true }
+      required: [member_type, member_id, active_issues]
+
+    SquadActiveIssueBrief:
+      type: object
+      properties:
+        issue_id: { type: string, format: uuid }
+        identifier: { type: string }
+        title: { type: string }
+        issue_status: { type: string }
+      required: [issue_id, identifier, title, issue_status]
+
+    SquadMemberStatusListResponse:
+      type: object
+      properties:
+        members:
+          type: array
+          items: { $ref: '#/components/schemas/SquadMemberStatusResponse' }
+      required: [members]
