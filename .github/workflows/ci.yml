@@ -49,6 +49,18 @@ jobs:
         # exclude @multica/mobile.
         run: pnpm exec turbo build typecheck lint test --filter='!@multica/docs' --filter='!@multica/mobile'
 
+      - name: Collect frontend coverage
+        run: |
+          pnpm exec turbo test:coverage --filter='!@multica/docs' --filter='!@multica/mobile'
+          mkdir -p coverage
+          find packages apps -path '*/coverage/lcov.info' -exec cat {} + > coverage/lcov.info
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: coverage/
+
   backend:
     runs-on: ubuntu-latest
     services:

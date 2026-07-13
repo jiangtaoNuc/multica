@@ -6,7 +6,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "exports": {
     ".": "./index.ts",
@@ -128,6 +129,7 @@
     "@multica/tsconfig": "workspace:*",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "jsdom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
