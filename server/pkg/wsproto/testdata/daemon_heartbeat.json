@@ -1,0 +1,7 @@
+{
+  "type": "daemon:heartbeat",
+  "payload": {
+    "runtime_id": "runtime-001",
+    "supports_batch_import": true
+  }
+}

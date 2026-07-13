@@ -1,0 +1,8 @@
+{
+  "type": "task:completed",
+  "payload": {
+    "task_id": "task-001",
+    "pr_url": "https://github.com/example/repo/pull/42",
+    "output": "Fixed the login redirect and added tests."
+  }
+}
