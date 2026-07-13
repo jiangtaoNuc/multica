@@ -1,0 +1,9 @@
+{
+  "type": "task:progress",
+  "payload": {
+    "task_id": "task-001",
+    "summary": "Reading repository files",
+    "step": 2,
+    "total": 5
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "type": "task:dispatch",
+  "payload": {
+    "task_id": "task-001",
+    "issue_id": "issue-001",
+    "title": "Fix login redirect",
+    "description": "The login redirect loses the original path after OAuth."
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "type": "daemon:runtime_profiles_changed",
+  "payload": {
+    "workspace_id": "workspace-001",
+    "runtime_profile_id": "profile-001"
+  }
+}

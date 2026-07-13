@@ -1,0 +1,19 @@
+{
+  "type": "daemon:register",
+  "payload": {
+    "daemon_id": "daemon-001",
+    "agent_id": "agent-001",
+    "runtimes": [
+      {
+        "type": "local",
+        "version": "1.2.3",
+        "status": "idle"
+      },
+      {
+        "type": "docker",
+        "version": "2.0.0",
+        "status": "offline"
+      }
+    ]
+  }
+}

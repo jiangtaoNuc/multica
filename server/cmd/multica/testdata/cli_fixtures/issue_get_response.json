@@ -1,0 +1,10 @@
+{
+  "id": "11111111-1111-1111-1111-111111111111",
+  "identifier": "MUL-123",
+  "title": "Fix login redirect",
+  "status": "in_progress",
+  "priority": "high",
+  "description": "The login redirect loses the original path after OAuth.",
+  "created_at": "2026-07-13T08:00:00Z",
+  "updated_at": "2026-07-13T08:30:00Z"
+}

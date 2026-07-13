@@ -1226,19 +1226,19 @@ components:
         number: { type: integer }
         identifier: { type: string }
         title: { type: string }
-        description: { type: string, nullable: true }
+        description: { type: [string, "null"] }
         status: { type: string }
         priority: { type: string }
-        assignee_type: { type: string, nullable: true }
-        assignee_id: { type: string, nullable: true }
+        assignee_type: { type: [string, "null"] }
+        assignee_id: { type: [string, "null"] }
         creator_type: { type: string }
         creator_id: { type: string, format: uuid }
-        parent_issue_id: { type: string, nullable: true }
-        project_id: { type: string, nullable: true }
+        parent_issue_id: { type: [string, "null"] }
+        project_id: { type: [string, "null"] }
         position: { type: number }
-        stage: { type: integer, nullable: true }
-        start_date: { type: string, nullable: true }
-        due_date: { type: string, nullable: true }
+        stage: { type: [integer, "null"] }
+        start_date: { type: [string, "null"] }
+        due_date: { type: [string, "null"] }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
         metadata:
@@ -1261,9 +1261,9 @@ components:
         - type: object
           properties:
             match_source: { type: string }
-            matched_snippet: { type: string, nullable: true }
-            matched_description_snippet: { type: string, nullable: true }
-            matched_comment_snippet: { type: string, nullable: true }
+            matched_snippet: { type: [string, "null"] }
+            matched_description_snippet: { type: [string, "null"] }
+            matched_comment_snippet: { type: [string, "null"] }
           required: [match_source]
 
     GroupedIssuesResponse:
@@ -1277,8 +1277,8 @@ components:
     IssueAssigneeGroupResponse:
       type: object
       properties:
-        assignee_type: { type: string, nullable: true }
-        assignee_id: { type: string, nullable: true }
+        assignee_type: { type: [string, "null"] }
+        assignee_id: { type: [string, "null"] }
         total: { type: integer }
         issues:
           type: array
@@ -1289,39 +1289,39 @@ components:
       type: object
       properties:
         title: { type: string }
-        description: { type: string, nullable: true }
+        description: { type: [string, "null"] }
         status: { type: string }
         priority: { type: string }
-        assignee_type: { type: string, nullable: true }
-        assignee_id: { type: string, nullable: true }
-        parent_issue_id: { type: string, nullable: true }
-        project_id: { type: string, nullable: true }
-        stage: { type: integer, nullable: true }
-        start_date: { type: string, nullable: true }
-        due_date: { type: string, nullable: true }
+        assignee_type: { type: [string, "null"] }
+        assignee_id: { type: [string, "null"] }
+        parent_issue_id: { type: [string, "null"] }
+        project_id: { type: [string, "null"] }
+        stage: { type: [integer, "null"] }
+        start_date: { type: [string, "null"] }
+        due_date: { type: [string, "null"] }
         attachment_ids:
           type: array
           items: { type: string }
-        origin_type: { type: string, nullable: true }
-        origin_id: { type: string, nullable: true }
+        origin_type: { type: [string, "null"] }
+        origin_id: { type: [string, "null"] }
         allow_duplicate: { type: boolean }
       required: [title]
 
     UpdateIssueRequest:
       type: object
       properties:
-        title: { type: string, nullable: true }
-        description: { type: string, nullable: true }
-        status: { type: string, nullable: true }
-        priority: { type: string, nullable: true }
-        assignee_type: { type: string, nullable: true }
-        assignee_id: { type: string, nullable: true }
-        position: { type: number, nullable: true }
-        start_date: { type: string, nullable: true }
-        due_date: { type: string, nullable: true }
-        parent_issue_id: { type: string, nullable: true }
-        project_id: { type: string, nullable: true }
-        stage: { type: integer, nullable: true }
+        title: { type: [string, "null"] }
+        description: { type: [string, "null"] }
+        status: { type: [string, "null"] }
+        priority: { type: [string, "null"] }
+        assignee_type: { type: [string, "null"] }
+        assignee_id: { type: [string, "null"] }
+        position: { type: [number, "null"] }
+        start_date: { type: [string, "null"] }
+        due_date: { type: [string, "null"] }
+        parent_issue_id: { type: [string, "null"] }
+        project_id: { type: [string, "null"] }
+        stage: { type: [integer, "null"] }
         attachment_ids:
           type: array
           items: { type: string }
@@ -1448,10 +1448,10 @@ components:
       properties:
         id: { type: string, format: uuid }
         workspace_id: { type: string, format: uuid }
-        issue_id: { type: string, nullable: true }
-        comment_id: { type: string, nullable: true }
-        chat_session_id: { type: string, nullable: true }
-        chat_message_id: { type: string, nullable: true }
+        issue_id: { type: [string, "null"] }
+        comment_id: { type: [string, "null"] }
+        chat_session_id: { type: [string, "null"] }
+        chat_message_id: { type: [string, "null"] }
         uploader_type: { type: string }
         uploader_id: { type: string, format: uuid }
         filename: { type: string }
@@ -1470,22 +1470,22 @@ components:
         author_id: { type: string, format: uuid }
         content: { type: string }
         type: { type: string }
-        parent_id: { type: string, nullable: true }
+        parent_id: { type: [string, "null"] }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
-        resolved_at: { type: string, nullable: true }
-        resolved_by_type: { type: string, nullable: true }
-        resolved_by_id: { type: string, nullable: true }
-        source_task_id: { type: string, nullable: true }
+        resolved_at: { type: [string, "null"] }
+        resolved_by_type: { type: [string, "null"] }
+        resolved_by_id: { type: [string, "null"] }
+        source_task_id: { type: [string, "null"] }
         reactions:
           type: array
           items: { $ref: '#/components/schemas/ReactionResponse' }
         attachments:
           type: array
           items: { $ref: '#/components/schemas/AttachmentResponse' }
-        reply_count: { type: integer, nullable: true }
-        last_activity_at: { type: string, nullable: true }
-        content_truncated: { type: boolean, nullable: true }
+        reply_count: { type: [integer, "null"] }
+        last_activity_at: { type: [string, "null"] }
+        content_truncated: { type: [boolean, "null"] }
       required: [id, issue_id, author_type, author_id, content, type, created_at, updated_at, reactions, attachments]
 
     CreateCommentRequest:
@@ -1493,7 +1493,7 @@ components:
       properties:
         content: { type: string }
         type: { type: string }
-        parent_id: { type: string, nullable: true }
+        parent_id: { type: [string, "null"] }
         attachment_ids:
           type: array
           items: { type: string }
@@ -1517,8 +1517,8 @@ components:
       type: object
       properties:
         content: { type: string }
-        parent_id: { type: string, nullable: true }
-        editing_comment_id: { type: string, nullable: true }
+        parent_id: { type: [string, "null"] }
+        editing_comment_id: { type: [string, "null"] }
       required: [content]
 
     CommentTriggerPreviewResponse:
@@ -1534,7 +1534,7 @@ components:
       properties:
         id: { type: string, format: uuid }
         name: { type: string }
-        avatar_url: { type: string, nullable: true }
+        avatar_url: { type: [string, "null"] }
         source: { type: string }
         reason: { type: string }
       required: [id, name, source, reason]
@@ -1560,7 +1560,7 @@ components:
         name: { type: string }
         description: { type: string }
         instructions: { type: string }
-        avatar_url: { type: string, nullable: true }
+        avatar_url: { type: [string, "null"] }
         runtime_mode: { type: string }
         runtime_config: {}
         custom_args:
@@ -1575,14 +1575,14 @@ components:
         max_concurrent_tasks: { type: integer }
         model: { type: string }
         thinking_level: { type: string }
-        owner_id: { type: string, nullable: true }
+        owner_id: { type: [string, "null"] }
         skills:
           type: array
           items: { $ref: '#/components/schemas/AgentSkillSummary' }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
-        archived_at: { type: string, nullable: true }
-        archived_by: { type: string, nullable: true }
+        archived_at: { type: [string, "null"] }
+        archived_by: { type: [string, "null"] }
       required: [id, workspace_id, runtime_id, name, description, instructions, runtime_mode, runtime_config, custom_args, mcp_config, has_custom_env, custom_env_key_count, mcp_config_redacted, visibility, status, max_concurrent_tasks, model, thinking_level, skills, created_at, updated_at]
 
     CreateAgentRequest:
@@ -1591,7 +1591,7 @@ components:
         name: { type: string }
         description: { type: string }
         instructions: { type: string }
-        avatar_url: { type: string, nullable: true }
+        avatar_url: { type: [string, "null"] }
         runtime_id: { type: string, format: uuid }
         runtime_config: {}
         custom_env:
@@ -1611,21 +1611,21 @@ components:
     UpdateAgentRequest:
       type: object
       properties:
-        name: { type: string, nullable: true }
-        description: { type: string, nullable: true }
-        instructions: { type: string, nullable: true }
-        avatar_url: { type: string, nullable: true }
-        runtime_id: { type: string, nullable: true }
+        name: { type: [string, "null"] }
+        description: { type: [string, "null"] }
+        instructions: { type: [string, "null"] }
+        avatar_url: { type: [string, "null"] }
+        runtime_id: { type: [string, "null"] }
         runtime_config: {}
         custom_args:
           type: array
           items: { type: string }
         mcp_config: {}
-        visibility: { type: string, nullable: true }
-        status: { type: string, nullable: true }
-        max_concurrent_tasks: { type: integer, nullable: true }
-        model: { type: string, nullable: true }
-        thinking_level: { type: string, nullable: true }
+        visibility: { type: [string, "null"] }
+        status: { type: [string, "null"] }
+        max_concurrent_tasks: { type: [integer, "null"] }
+        model: { type: [string, "null"] }
+        thinking_level: { type: [string, "null"] }
 
     CreateAgentFromTemplateRequest:
       type: object
@@ -1636,9 +1636,9 @@ components:
         model: { type: string }
         visibility: { type: string }
         max_concurrent_tasks: { type: integer }
-        description: { type: string, nullable: true }
-        instructions: { type: string, nullable: true }
-        avatar_url: { type: string, nullable: true }
+        description: { type: [string, "null"] }
+        instructions: { type: [string, "null"] }
+        avatar_url: { type: [string, "null"] }
         extra_skill_ids:
           type: array
           items: { type: string }
@@ -1660,7 +1660,7 @@ components:
         name: { type: string }
         description: { type: string }
         config: {}
-        created_by: { type: string, nullable: true }
+        created_by: { type: [string, "null"] }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
       required: [id, workspace_id, name, description, config, created_at, updated_at]
@@ -1704,35 +1704,35 @@ components:
         id: { type: string, format: uuid }
         agent_id: { type: string, format: uuid }
         runtime_id: { type: string, format: uuid }
-        issue_id: { type: string, format: uuid, nullable: true }
+        issue_id: { type: [string, "null"], format: uuid }
         workspace_id: { type: string, format: uuid }
         workspace_context: { type: string }
         thread_name: { type: string }
         status: { type: string }
         priority: { type: string }
-        dispatched_at: { type: string, format: date-time, nullable: true }
-        started_at: { type: string, format: date-time, nullable: true }
-        completed_at: { type: string, format: date-time, nullable: true }
-        result: { type: string, nullable: true }
-        error: { type: string, nullable: true }
-        failure_reason: { type: string, nullable: true }
+        dispatched_at: { type: [string, "null"], format: date-time }
+        started_at: { type: [string, "null"], format: date-time }
+        completed_at: { type: [string, "null"], format: date-time }
+        result: { type: [string, "null"] }
+        error: { type: [string, "null"] }
+        failure_reason: { type: [string, "null"] }
         attempt: { type: integer }
         max_attempts: { type: integer }
-        parent_task_id: { type: string, nullable: true }
+        parent_task_id: { type: [string, "null"] }
         agent:
           type: object
           properties:
             id: { type: string, format: uuid }
             name: { type: string }
-            avatar_url: { type: string, nullable: true }
+            avatar_url: { type: [string, "null"] }
         repos:
           type: array
           items:
             type: object
             additionalProperties: true
-        project_id: { type: string, nullable: true }
-        project_title: { type: string, nullable: true }
-        project_description: { type: string, nullable: true }
+        project_id: { type: [string, "null"] }
+        project_title: { type: [string, "null"] }
+        project_description: { type: [string, "null"] }
         project_resources:
           type: array
           items:
@@ -1750,13 +1750,13 @@ components:
         name: { type: string }
         description: { type: string }
         instructions: { type: string }
-        avatar_url: { type: string, nullable: true }
+        avatar_url: { type: [string, "null"] }
         leader_id: { type: string, format: uuid }
         creator_id: { type: string, format: uuid }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
-        archived_at: { type: string, nullable: true }
-        archived_by: { type: string, nullable: true }
+        archived_at: { type: [string, "null"] }
+        archived_by: { type: [string, "null"] }
         member_count: { type: integer }
         member_preview:
           type: array
@@ -1769,7 +1769,7 @@ components:
         name: { type: string }
         description: { type: string }
         leader_id: { type: string, format: uuid }
-        avatar_url: { type: string, nullable: true }
+        avatar_url: { type: [string, "null"] }
       required: [name]
 
     UpdateSquadRequest:
@@ -1779,7 +1779,7 @@ components:
         description: { type: string }
         instructions: { type: string }
         leader_id: { type: string, format: uuid }
-        avatar_url: { type: string, nullable: true }
+        avatar_url: { type: [string, "null"] }
 
     SquadMemberPreviewResponse:
       type: object
@@ -1821,11 +1821,11 @@ components:
       properties:
         member_type: { type: string }
         member_id: { type: string, format: uuid }
-        status: { type: string, nullable: true }
+        status: { type: [string, "null"] }
         active_issues:
           type: array
           items: { $ref: '#/components/schemas/SquadActiveIssueBrief' }
-        last_active_at: { type: string, nullable: true }
+        last_active_at: { type: [string, "null"] }
       required: [member_type, member_id, active_issues]
 
     SquadActiveIssueBrief:

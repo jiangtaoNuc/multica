@@ -1,0 +1,7 @@
+{
+  "type": "daemon:task_available",
+  "payload": {
+    "runtime_id": "runtime-001",
+    "task_id": "task-001"
+  }
+}

@@ -37,6 +37,9 @@ Closes #
 
 - [ ] I have included a thinking path that traces from project context to this change
 - [ ] I have run tests locally and they pass
+- [ ] `make check` passes locally
+- [ ] If I changed handlers or schemas, I ran `pnpm run generate:api` and committed the generated artifacts
+- [ ] New or updated migrations include a `.down.sql` file
 - [ ] I have added or updated tests where applicable
 - [ ] If I added/modified an API handler, I updated `server/api/openapi.yaml` and ran `pnpm run generate:api`
 - [ ] If this change affects the UI, I have included before/after screenshots
