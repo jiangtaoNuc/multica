@@ -298,6 +298,26 @@ Notes:
 - E2E tests create their own workspace and issue fixtures
 - the check flow starts backend/frontend only if they are not already running
 
+### Updating golden snapshots
+
+The WS protocol tests under `server/pkg/wsproto` deserialize every checked-in
+golden JSON file, assert key fields, re-serialize the value, and compare it to
+the original. This catches accidental field additions or `omitempty` drift.
+
+If you intentionally change a message shape, refresh the golden files with the
+`-update` flag:
+
+```bash
+cd server
+go test ./pkg/wsproto/... -update
+```
+
+Review the diff before committing to make sure only the intended fields changed.
+
+CLI command fixtures under `server/cmd/multica` use `httptest.Server` playback
+tests and do not currently support `-update`; edit the JSON fixtures in
+`server/cmd/multica/testdata/cli_fixtures` directly when response shapes change.
+
 ## Local Codex Daemon
 
 Run the local daemon:
