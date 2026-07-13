@@ -51,6 +51,9 @@ jobs:
 
   backend:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     services:
       postgres:
         image: pgvector/pgvector:pg17
@@ -97,8 +100,32 @@ jobs:
       - name: Run migrations
         run: cd server && go run ./cmd/migrate up
 
-      - name: Test
-        run: cd server && go test -race ./...
+      - name: Test with coverage
+        run: cd server && go test -race -covermode=atomic -coverprofile=coverage.out ./...
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: server/coverage.out
+          if-no-files-found: error
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          total=$(cd server && go tool cover -func=coverage.out | tail -1)
+          {
+            echo "### Go coverage summary"
+            echo ""
+            echo "- Total: ${total}"
+          } > coverage-comment.md
+          gh pr comment ${{ github.event.pull_request.number }} --body-file coverage-comment.md
+
+      - name: Check core package coverage thresholds
+        run: bash scripts/coverage-check.sh server/coverage.out
 
   installer:
     # Stub-driven shell tests for scripts/install.sh. Kept off the heavy

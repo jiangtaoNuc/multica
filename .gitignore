@@ -34,6 +34,7 @@ dist-electron
 
 # test coverage
 coverage
+server/coverage.out
 
 # Go
 server/bin/
