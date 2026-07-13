@@ -77,33 +77,52 @@ echo "==> Checking PostgreSQL..."
 bash scripts/ensure-postgres.sh "$ENV_FILE"
 
 # --------------------------------------------------------------------------
-# Step 1: TypeScript typecheck
+# Step 1: sqlc drift check
 # --------------------------------------------------------------------------
 echo ""
-echo "==> [1/5] TypeScript typecheck..."
+echo "==> [1/7] sqlc drift check..."
+if command -v sqlc > /dev/null 2>&1; then
+  (cd server && sqlc generate) || { EXIT_CODE=1; exit 1; }
+  git diff --exit-code -- server/ || { echo "ERROR: sqlc drift detected — run 'make sqlc' and commit the result."; EXIT_CODE=1; exit 1; }
+else
+  echo "    sqlc not found in PATH — skipping drift check (install sqlc to enable)"
+fi
+
+# --------------------------------------------------------------------------
+# Step 2: Migration roundtrip smoke test
+# --------------------------------------------------------------------------
+echo ""
+echo "==> [2/7] Migration roundtrip smoke test..."
+bash scripts/migrate-roundtrip.sh || { EXIT_CODE=1; exit 1; }
+
+# --------------------------------------------------------------------------
+# Step 3: TypeScript typecheck
+# --------------------------------------------------------------------------
+echo ""
+echo "==> [3/7] TypeScript typecheck..."
 pnpm typecheck || { EXIT_CODE=1; exit 1; }
 
 # --------------------------------------------------------------------------
-# Step 2: TypeScript unit tests (Vitest)
+# Step 4: TypeScript unit tests (Vitest)
 # --------------------------------------------------------------------------
 echo ""
-echo "==> [2/5] TypeScript unit tests..."
+echo "==> [4/7] TypeScript unit tests..."
 pnpm test || { EXIT_CODE=1; exit 1; }
 
 # --------------------------------------------------------------------------
-# Step 3: Go tests
+# Step 5: Go tests
 # --------------------------------------------------------------------------
 echo ""
-echo "==> [3/5] Go tests..."
+echo "==> [5/7] Go tests..."
 echo "==> Running database migrations..."
 (cd server && go run ./cmd/migrate up) || { EXIT_CODE=1; exit 1; }
 (cd server && go test ./...) || { EXIT_CODE=1; exit 1; }
 
 # --------------------------------------------------------------------------
-# Step 4: Start services for E2E (only if not already running)
+# Step 6: Start services for E2E (only if not already running)
 # --------------------------------------------------------------------------
 echo ""
-echo "==> [4/5] Starting services for E2E..."
+echo "==> [6/7] Starting services for E2E..."
 
 if curl -sf "http://localhost:${PORT}/health" > /dev/null 2>&1; then
   echo "    Backend already running on :$PORT"
@@ -126,8 +145,8 @@ else
 fi
 
 # --------------------------------------------------------------------------
-# Step 5: E2E tests (Playwright)
+# Step 7: E2E tests (Playwright)
 # --------------------------------------------------------------------------
 echo ""
-echo "==> [5/5] E2E tests (Playwright)..."
+echo "==> [7/7] E2E tests (Playwright)..."
 pnpm exec playwright test || { EXIT_CODE=1; exit 1; }

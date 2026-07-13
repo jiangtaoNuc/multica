@@ -1,6 +1,7 @@
 export {
   ApiClient,
   ApiError,
+  NetworkError,
   PreviewTooLargeError,
   PreviewUnsupportedError,
 } from "./client";

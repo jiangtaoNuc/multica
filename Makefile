@@ -1,4 +1,4 @@
-.PHONY: help makehelp dev server daemon cli multica build test coverage migrate-up migrate-down sqlc seed clean setup start stop check worktree-env setup-main start-main stop-main check-main setup-worktree start-worktree stop-worktree check-worktree db-up db-down db-reset selfhost selfhost-build selfhost-stop
+.PHONY: help makehelp dev server daemon cli multica build test coverage migrate-up migrate-down sqlc sqlc-check migrate-check seed clean setup start stop check worktree-env setup-main start-main stop-main check-main setup-worktree start-worktree stop-worktree check-worktree db-up db-down db-reset selfhost selfhost-build selfhost-stop
 
 MAIN_ENV_FILE ?= .env
 WORKTREE_ENV_FILE ?= .env.worktree
@@ -321,6 +321,15 @@ migrate-down: ## Create the target DB if needed, then roll back database migrati
 
 sqlc: ## Regenerate sqlc code
 	cd server && sqlc generate
+
+sqlc-check: ## Verify sqlc-generated code is up to date (fails if drift detected)
+	cd server && sqlc generate
+	git diff --exit-code -- server/
+
+migrate-check: ## Smoke-test the last 10 migrations for down→up roundtrip idempotency
+	$(REQUIRE_ENV)
+	@bash scripts/ensure-postgres.sh "$(ENV_FILE)"
+	bash scripts/migrate-roundtrip.sh
 
 # Cleanup
 ##@ Cleanup
