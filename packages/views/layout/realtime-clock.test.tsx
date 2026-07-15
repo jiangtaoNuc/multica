@@ -26,7 +26,6 @@ describe("RealtimeClock", () => {
       vi.advanceTimersByTime(0);
     });
     act(() => {
-      vi.setSystemTime(new Date("2026-07-15T13:45:33"));
       vi.advanceTimersByTime(3000);
     });
     expect(screen.getByLabelText("Current time")).toHaveTextContent("13:45:33");
