@@ -116,6 +116,9 @@ jobs:
     if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.workflows == 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Backend setup
         id: setup
         uses: ./.github/actions/backend-setup
@@ -170,6 +173,9 @@ jobs:
       # directly so they run alongside the Postgres-backed suite.
       REDIS_TEST_URL: redis://localhost:6379/1
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Backend setup
         id: setup
         uses: ./.github/actions/backend-setup
@@ -191,7 +197,7 @@ jobs:
 
   # ---------------------------------------------------------------- #
   # Backend contract: verify DB schema / migration contract          #
-  # (sqlc drift + migrate roundtrip will be added by LOO-346,        #
+  # (migrate idempotency + sqlc drift + migrate roundtrip;           #
   #  OpenAPI contract drift by LOO-349, golden snapshots by LOO-350) #
   # ---------------------------------------------------------------- #
   backend-contract:
@@ -215,6 +221,9 @@ jobs:
     env:
       DATABASE_URL: postgres://multica:multica@localhost:5432/multica?sslmode=disable
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Backend setup
         id: setup
         uses: ./.github/actions/backend-setup
@@ -227,6 +236,20 @@ jobs:
         # no-op. A non-idempotent migration file (e.g. one that CREATEs
         # without IF NOT EXISTS) will fail here.
         run: cd server && go run ./cmd/migrate up
+
+      - name: SQLC drift
+        # Install sqlc, regenerate, and fail if generated code diverges from
+        # what is checked in. Ensures the repo's single source of truth
+        # (migrations/ → pkg/db/generated/) is always in sync.
+        run: |
+          go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+          cd server && sqlc generate
+          git diff --exit-code -- server/
+
+      - name: Migrate roundtrip
+        # Smoke-tests the last 10 migrations for down→up idempotency.
+        # Fails fast if any .down.sql is missing or the round-trip breaks.
+        run: bash scripts/migrate-roundtrip.sh
 
       - name: Report duration
         if: always()

@@ -1,0 +1,17 @@
+{
+  "type": "daemon:heartbeat_ack",
+  "payload": {
+    "runtime_id": "runtime-001",
+    "status": "ok",
+    "pending_local_skill_imports": [
+      {
+        "id": "import-001",
+        "skill_key": "custom-linter"
+      },
+      {
+        "id": "import-002",
+        "skill_key": "security-review"
+      }
+    ]
+  }
+}

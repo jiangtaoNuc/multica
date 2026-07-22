@@ -1,0 +1,12 @@
+{
+  "type": "task:message",
+  "payload": {
+    "task_id": "task-001",
+    "issue_id": "issue-001",
+    "seq": 9,
+    "type": "tool_result",
+    "tool": "Read",
+    "output": "package main\n\nfunc main() {\n    println(\"hello\")\n}\n",
+    "created_at": "2026-07-13T08:30:02Z"
+  }
+}

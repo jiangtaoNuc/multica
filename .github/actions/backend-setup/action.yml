@@ -1,5 +1,5 @@
 name: Backend Setup
-description: Checkout + setup Go with module and build cache, shared by backend jobs
+description: Setup Go with module and build cache, shared by backend jobs (caller must checkout first)
 
 inputs:
   go-version:
@@ -19,9 +19,6 @@ runs:
       id: timer
       shell: bash
       run: echo "start=$(date +%s)" >> "$GITHUB_OUTPUT"
-
-    - name: Checkout
-      uses: actions/checkout@v6
 
     - name: Setup Go
       uses: actions/setup-go@v5
