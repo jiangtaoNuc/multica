@@ -426,9 +426,9 @@ func TestResolveAgentsViaLoginShell_HardTimeoutOnBackgroundedStdout(t *testing.T
 	t.Setenv("SHELL", sh)
 	t.Setenv("ENV", rc)
 
-	// Cap = context timeout + wait delay + generous slack for goroutine
+	// Deadline = context timeout + wait delay + generous slack for goroutine
 	// scheduling. A bug that disables WaitDelay would blow past 60s here.
-	cap := loginShellResolveTimeout + loginShellResolveWaitDelay + 3*time.Second
+	deadline := loginShellResolveTimeout + loginShellResolveWaitDelay + 3*time.Second
 	start := time.Now()
 	done := make(chan struct{})
 	go func() {
@@ -437,11 +437,11 @@ func TestResolveAgentsViaLoginShell_HardTimeoutOnBackgroundedStdout(t *testing.T
 	}()
 	select {
 	case <-done:
-		if elapsed := time.Since(start); elapsed > cap {
-			t.Errorf("resolver took %v, expected <= %v (WaitDelay leak?)", elapsed, cap)
+		if elapsed := time.Since(start); elapsed > deadline {
+			t.Errorf("resolver took %v, expected <= %v (WaitDelay leak?)", elapsed, deadline)
 		}
-	case <-time.After(cap):
-		t.Fatalf("resolver did not return within %v — WaitDelay is not enforcing a hard ceiling", cap)
+	case <-time.After(deadline):
+		t.Fatalf("resolver did not return within %v — WaitDelay is not enforcing a hard ceiling", deadline)
 	}
 }
 
@@ -601,18 +601,6 @@ func pinNonCodexAgentsToMissingPaths(t *testing.T) {
 // =============================================================================
 // CLI config Backends.OpenClaw overrides (issue #3875)
 // =============================================================================
-
-// writeCLIConfigForProfile is a minimal helper for the override tests:
-// stages a HOME, writes a config.json under the given profile (empty profile
-// = default), and returns the resolved path so tests can assert against it.
-func writeCLIConfigForProfile(t *testing.T, profile string, cfg cli.CLIConfig) {
-	t.Helper()
-	tmp := t.TempDir()
-	t.Setenv("HOME", tmp)
-	if err := cli.SaveCLIConfigForProfile(cfg, profile); err != nil {
-		t.Fatalf("write cli config: %v", err)
-	}
-}
 
 // TestApplyOpenclawOverride_DoesNothingWhenNil verifies the early-return
 // path. A daemon started with no override should not Setenv anything; the

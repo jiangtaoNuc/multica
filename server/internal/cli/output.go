@@ -11,11 +11,11 @@ import (
 // PrintTable writes a simple table with headers and rows to w.
 func PrintTable(w io.Writer, headers []string, rows [][]string) {
 	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
-	fmt.Fprintln(tw, strings.Join(headers, "\t"))
+	_, _ = fmt.Fprintln(tw, strings.Join(headers, "\t"))
 	for _, row := range rows {
-		fmt.Fprintln(tw, strings.Join(row, "\t"))
+		_, _ = fmt.Fprintln(tw, strings.Join(row, "\t"))
 	}
-	tw.Flush()
+	_ = tw.Flush()
 }
 
 // PrintJSON writes v as indented JSON to w.

@@ -34,59 +34,59 @@ func TestWorkspaceScopeGuard(t *testing.T) {
 	wsB := randomUUID(t) // never-existed workspace; the guard predicate must reject it
 
 	t.Run("DeleteIssue", func(t *testing.T) {
-		id := seedIssue(t, ctx)
+		id := seedIssue(ctx, t)
 		t.Cleanup(func() { testPool.Exec(ctx, `DELETE FROM issue WHERE id = $1`, util.UUIDToString(id)) })
 
 		if err := queries.DeleteIssue(ctx, db.DeleteIssueParams{ID: id, WorkspaceID: wsB}); err != nil {
 			t.Fatalf("cross-workspace DeleteIssue: expected nil error (no-op), got %v", err)
 		}
-		assertRowExists(t, ctx, "issue", id)
+		assertRowExists(ctx, t, "issue", id)
 	})
 
 	t.Run("DeleteComment", func(t *testing.T) {
-		issueID := seedIssue(t, ctx)
+		issueID := seedIssue(ctx, t)
 		t.Cleanup(func() { testPool.Exec(ctx, `DELETE FROM issue WHERE id = $1`, util.UUIDToString(issueID)) })
-		id := seedComment(t, ctx, issueID)
+		id := seedComment(ctx, t, issueID)
 		t.Cleanup(func() { testPool.Exec(ctx, `DELETE FROM comment WHERE id = $1`, util.UUIDToString(id)) })
 
 		if err := queries.DeleteComment(ctx, db.DeleteCommentParams{ID: id, WorkspaceID: wsB}); err != nil {
 			t.Fatalf("cross-workspace DeleteComment: expected nil error (no-op), got %v", err)
 		}
-		assertRowExists(t, ctx, "comment", id)
+		assertRowExists(ctx, t, "comment", id)
 	})
 
 	t.Run("DeleteProject", func(t *testing.T) {
-		id := seedProject(t, ctx)
+		id := seedProject(ctx, t)
 		t.Cleanup(func() { testPool.Exec(ctx, `DELETE FROM project WHERE id = $1`, util.UUIDToString(id)) })
 
 		if err := queries.DeleteProject(ctx, db.DeleteProjectParams{ID: id, WorkspaceID: wsB}); err != nil {
 			t.Fatalf("cross-workspace DeleteProject: expected nil error (no-op), got %v", err)
 		}
-		assertRowExists(t, ctx, "project", id)
+		assertRowExists(ctx, t, "project", id)
 	})
 
 	t.Run("DeleteSkill", func(t *testing.T) {
-		id := seedSkill(t, ctx)
+		id := seedSkill(ctx, t)
 		t.Cleanup(func() { testPool.Exec(ctx, `DELETE FROM skill WHERE id = $1`, util.UUIDToString(id)) })
 
 		if err := queries.DeleteSkill(ctx, db.DeleteSkillParams{ID: id, WorkspaceID: wsB}); err != nil {
 			t.Fatalf("cross-workspace DeleteSkill: expected nil error (no-op), got %v", err)
 		}
-		assertRowExists(t, ctx, "skill", id)
+		assertRowExists(ctx, t, "skill", id)
 	})
 
 	t.Run("DeleteChatSession", func(t *testing.T) {
-		id := seedChatSession(t, ctx)
+		id := seedChatSession(ctx, t)
 		t.Cleanup(func() { testPool.Exec(ctx, `DELETE FROM chat_session WHERE id = $1`, util.UUIDToString(id)) })
 
 		if err := queries.DeleteChatSession(ctx, db.DeleteChatSessionParams{ID: id, WorkspaceID: wsB}); err != nil {
 			t.Fatalf("cross-workspace DeleteChatSession: expected nil error (no-op), got %v", err)
 		}
-		assertRowExists(t, ctx, "chat_session", id)
+		assertRowExists(ctx, t, "chat_session", id)
 	})
 
 	t.Run("UpdateIssueStatus", func(t *testing.T) {
-		id := seedIssue(t, ctx)
+		id := seedIssue(ctx, t)
 		t.Cleanup(func() { testPool.Exec(ctx, `DELETE FROM issue WHERE id = $1`, util.UUIDToString(id)) })
 
 		_, err := queries.UpdateIssueStatus(ctx, db.UpdateIssueStatusParams{
@@ -112,7 +112,7 @@ func TestWorkspaceScopeGuard(t *testing.T) {
 	// also satisfy the cross-workspace assertions above. This sub-test
 	// proves the in-workspace path still mutates.
 	t.Run("InWorkspaceCallsStillWork", func(t *testing.T) {
-		id := seedIssue(t, ctx)
+		id := seedIssue(ctx, t)
 		t.Cleanup(func() { testPool.Exec(ctx, `DELETE FROM issue WHERE id = $1`, util.UUIDToString(id)) })
 
 		if err := queries.DeleteIssue(ctx, db.DeleteIssueParams{ID: id, WorkspaceID: wsA}); err != nil {
@@ -130,12 +130,12 @@ func TestWorkspaceScopeGuard(t *testing.T) {
 
 // ---- seed helpers (resource lives in testWorkspaceID) ----
 
-func seedIssue(t *testing.T, ctx context.Context) pgtype.UUID {
+func seedIssue(ctx context.Context, t *testing.T) pgtype.UUID {
 	t.Helper()
 	var s string
 	// number is unique per workspace; pick a high-range random value to
 	// avoid colliding with concurrent integration tests in the same DB.
-	n := 1_000_000 + rand.IntN(1_000_000)
+	n := 1_000_000 + rand.IntN(1_000_000) //nolint:gosec // test-only issue number, not cryptographic
 	if err := testPool.QueryRow(ctx, `
 		INSERT INTO issue (workspace_id, title, status, priority, creator_type, creator_id, position, number)
 		VALUES ($1, 'scope-guard test issue', 'todo', 'none', 'member', $2, 0, $3)
@@ -146,7 +146,7 @@ func seedIssue(t *testing.T, ctx context.Context) pgtype.UUID {
 	return parseUUID(s)
 }
 
-func seedComment(t *testing.T, ctx context.Context, issueID pgtype.UUID) pgtype.UUID {
+func seedComment(ctx context.Context, t *testing.T, issueID pgtype.UUID) pgtype.UUID {
 	t.Helper()
 	var s string
 	if err := testPool.QueryRow(ctx, `
@@ -159,7 +159,7 @@ func seedComment(t *testing.T, ctx context.Context, issueID pgtype.UUID) pgtype.
 	return parseUUID(s)
 }
 
-func seedProject(t *testing.T, ctx context.Context) pgtype.UUID {
+func seedProject(ctx context.Context, t *testing.T) pgtype.UUID {
 	t.Helper()
 	var s string
 	if err := testPool.QueryRow(ctx, `
@@ -172,7 +172,7 @@ func seedProject(t *testing.T, ctx context.Context) pgtype.UUID {
 	return parseUUID(s)
 }
 
-func seedSkill(t *testing.T, ctx context.Context) pgtype.UUID {
+func seedSkill(ctx context.Context, t *testing.T) pgtype.UUID {
 	t.Helper()
 	var s string
 	// skill name is UNIQUE per workspace; add a random suffix to avoid colliding
@@ -188,7 +188,7 @@ func seedSkill(t *testing.T, ctx context.Context) pgtype.UUID {
 	return parseUUID(s)
 }
 
-func seedChatSession(t *testing.T, ctx context.Context) pgtype.UUID {
+func seedChatSession(ctx context.Context, t *testing.T) pgtype.UUID {
 	t.Helper()
 	var agentID string
 	if err := testPool.QueryRow(ctx, `
@@ -207,7 +207,7 @@ func seedChatSession(t *testing.T, ctx context.Context) pgtype.UUID {
 	return parseUUID(s)
 }
 
-func assertRowExists(t *testing.T, ctx context.Context, table string, id pgtype.UUID) {
+func assertRowExists(ctx context.Context, t *testing.T, table string, id pgtype.UUID) {
 	t.Helper()
 	var count int
 	if err := testPool.QueryRow(ctx, `SELECT count(*) FROM `+table+` WHERE id = $1`, util.UUIDToString(id)).Scan(&count); err != nil {

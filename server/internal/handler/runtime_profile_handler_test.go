@@ -11,7 +11,7 @@ import (
 
 // insertRuntimeProfileFixture creates a runtime_profile in testWorkspaceID and
 // returns its id, registering cleanup.
-func insertRuntimeProfileFixture(t *testing.T, ctx context.Context, displayName, protocolFamily, commandName string) string {
+func insertRuntimeProfileFixture(ctx context.Context, t *testing.T, displayName, protocolFamily, commandName string) string {
 	t.Helper()
 	var profileID string
 	if err := testPool.QueryRow(ctx, `
@@ -29,7 +29,7 @@ func insertRuntimeProfileFixture(t *testing.T, ctx context.Context, displayName,
 
 // insertProfileRuntimeFixture creates an agent_runtime instance bound to the
 // given profile (so profile_id is set), returning its id.
-func insertProfileRuntimeFixture(t *testing.T, ctx context.Context, profileID, name, provider string) string {
+func insertProfileRuntimeFixture(ctx context.Context, t *testing.T, profileID, name, provider string) string {
 	t.Helper()
 	var runtimeID string
 	if err := testPool.QueryRow(ctx, `
@@ -61,9 +61,9 @@ func TestDeleteRuntimeProfile_ArchivedAgentCascade(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	profileID := insertRuntimeProfileFixture(t, ctx, "Cascade Profile Archived", "codex", "company-codex-arch")
-	runtimeID := insertProfileRuntimeFixture(t, ctx, profileID, "Cascade Profile Runtime", "codex")
-	agentID := createCascadeFixtureAgent(t, ctx, runtimeID, "Cascade Profile Archived Agent")
+	profileID := insertRuntimeProfileFixture(ctx, t, "Cascade Profile Archived", "codex", "company-codex-arch")
+	runtimeID := insertProfileRuntimeFixture(ctx, t, profileID, "Cascade Profile Runtime", "codex")
+	agentID := createCascadeFixtureAgent(ctx, t, runtimeID, "Cascade Profile Archived Agent")
 
 	// Archive the agent — the active-agent guard passes, but the FK still pins
 	// the runtime row until the archived cascade clears it.
@@ -110,9 +110,9 @@ func TestDeleteRuntimeProfile_ActiveAgentBlocks(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	profileID := insertRuntimeProfileFixture(t, ctx, "Cascade Profile Active", "codex", "company-codex-active")
-	runtimeID := insertProfileRuntimeFixture(t, ctx, profileID, "Cascade Profile Active Runtime", "codex")
-	_ = createCascadeFixtureAgent(t, ctx, runtimeID, "Cascade Profile Active Agent")
+	profileID := insertRuntimeProfileFixture(ctx, t, "Cascade Profile Active", "codex", "company-codex-active")
+	runtimeID := insertProfileRuntimeFixture(ctx, t, profileID, "Cascade Profile Active Runtime", "codex")
+	_ = createCascadeFixtureAgent(ctx, t, runtimeID, "Cascade Profile Active Agent")
 
 	w := httptest.NewRecorder()
 	req := newRequest("DELETE", "/api/workspaces/"+testWorkspaceID+"/runtime-profiles/"+profileID, nil)

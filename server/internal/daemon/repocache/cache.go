@@ -14,7 +14,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
 )
 
 // gitEnv returns an environment for git subprocesses that contact remotes.
@@ -259,7 +258,7 @@ func gitCloneBare(url, dest string) error {
 
 	if out, err := cmd.CombinedOutput(); err != nil {
 		// Clean up partial clone.
-		os.RemoveAll(dest)
+		_ = os.RemoveAll(dest)
 		return fmt.Errorf("git clone --bare: %s: %w", strings.TrimSpace(string(out)), err)
 	}
 	// `git clone --bare` populates refs/heads/* as a snapshot and defaults to
@@ -267,7 +266,7 @@ func gitCloneBare(url, dest string) error {
 	// remote-tracking layout immediately so subsequent fetches write to
 	// refs/remotes/origin/* and can't conflict with worktree-locked heads.
 	if err := ensureRemoteTrackingLayout(dest); err != nil {
-		os.RemoveAll(dest)
+		_ = os.RemoveAll(dest)
 		return fmt.Errorf("configure fetch refspec: %w", err)
 	}
 	return nil
@@ -695,7 +694,7 @@ func getRemoteDefaultBranch(barePath string) string {
 	// 2) Common default branch names under the origin namespace.
 	for _, candidate := range []string{"refs/remotes/origin/main", "refs/remotes/origin/master"} {
 		cmd := exec.Command("git", "-C", barePath, "rev-parse", "--verify", candidate)
-	
+
 		if err := cmd.Run(); err == nil {
 			return candidate
 		}
@@ -710,7 +709,7 @@ func getRemoteDefaultBranch(barePath string) string {
 	if bareRef != "" {
 		originRef := "refs/remotes/origin/" + strings.TrimPrefix(bareRef, "refs/heads/")
 		cmd := exec.Command("git", "-C", barePath, "rev-parse", "--verify", originRef)
-	
+
 		if err := cmd.Run(); err == nil {
 			return originRef
 		}
@@ -901,7 +900,7 @@ func removeCoAuthoredByHook(worktreePath string) error {
 }
 
 // excludeFromGit adds a pattern to the worktree's .git/info/exclude file.
-func excludeFromGit(worktreePath, pattern string) error {
+func excludeFromGit(worktreePath, pattern string) (err error) {
 	cmd := exec.Command("git", "-C", worktreePath, "rev-parse", "--git-dir")
 
 	out, err := cmd.Output()
@@ -929,9 +928,13 @@ func excludeFromGit(worktreePath, pattern string) error {
 	if err != nil {
 		return fmt.Errorf("open exclude file: %w", err)
 	}
-	defer f.Close()
+	defer func() {
+		if cerr := f.Close(); cerr != nil && err == nil {
+			err = fmt.Errorf("close exclude file: %w", cerr)
+		}
+	}()
 
-	if _, err := fmt.Fprintf(f, "\n%s\n", pattern); err != nil {
+	if _, err = fmt.Fprintf(f, "\n%s\n", pattern); err != nil {
 		return fmt.Errorf("write exclude pattern: %w", err)
 	}
 	return nil

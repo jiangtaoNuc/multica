@@ -188,6 +188,7 @@ func TestClaudeExecuteDoesNotDeadlockOnStartupStdoutBurst(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -230,6 +231,7 @@ func TestClaudeExecuteRespondsToControlRequest(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -278,6 +280,7 @@ func TestClaudeExecuteForcesBackgroundControlRequestForeground(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -326,6 +329,7 @@ func TestClaudeExecuteFailsLoudlyOnAsyncLaunchedToolResult(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 

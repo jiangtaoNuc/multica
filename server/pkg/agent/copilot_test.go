@@ -680,6 +680,7 @@ func TestCopilotExecuteSurfacesStderrOnNonZeroResult(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 

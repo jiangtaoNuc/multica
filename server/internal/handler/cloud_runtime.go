@@ -187,7 +187,7 @@ func writeCloudRuntimeResponse(w http.ResponseWriter, resp *cloudruntime.Respons
 	if json.Valid(body) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(resp.StatusCode)
-		w.Write(body)
+		_, _ = w.Write(body)
 		return
 	}
 	writeJSON(w, resp.StatusCode, map[string]string{"error": string(body)})

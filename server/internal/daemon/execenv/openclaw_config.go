@@ -262,11 +262,7 @@ func prepareOpenclawConfig(envRoot, workDir string, opts OpenclawConfigPrep) (Op
 		return OpenclawConfigResult{}, fmt.Errorf("write openclaw config: %w", err)
 	}
 	result := OpenclawConfigResult{ConfigPath: outPath}
-	if snapshotPath != "" {
-		// Sanitized snapshot lives in envRoot alongside the wrapper, so the
-		// $include never crosses directories — daemon does not need to grant
-		// an extra OPENCLAW_INCLUDE_ROOTS entry.
-	} else if exists {
+	if snapshotPath == "" && exists {
 		// Live user config is in its own directory; tell the daemon to grant
 		// it so OpenClaw's include-confinement check passes.
 		result.IncludeRoot = filepath.Dir(activePath)

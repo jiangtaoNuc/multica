@@ -75,7 +75,7 @@ func TestHook_DirectV034Upgrade(t *testing.T) {
 	// INSERT/UPDATE post-102 only via the watermark window in
 	// rollup_task_usage_hourly_window, so we leave the watermark at
 	// the post-101 default of 1970-01-01.
-	wsID, runtimeID, agentID, taskID := seedTaskUsageFixture(t, ctx, pool)
+	wsID, runtimeID, agentID, taskID := seedTaskUsageFixture(ctx, t, pool)
 
 	twoHoursAgo := time.Now().UTC().Add(-2 * time.Hour)
 	if _, err := pool.Exec(ctx, `
@@ -340,7 +340,7 @@ func tryApplyMigration(ctx context.Context, pool *pgxpool.Pool, version string) 
 // (workspace, runtime, agent, agent_task_queue) needed for a task_usage
 // row to participate in the hourly rollup. Returns the IDs in
 // (workspace, runtime, agent, task) order.
-func seedTaskUsageFixture(t *testing.T, ctx context.Context, pool *pgxpool.Pool) (string, string, string, string) {
+func seedTaskUsageFixture(ctx context.Context, t *testing.T, pool *pgxpool.Pool) (string, string, string, string) {
 	t.Helper()
 
 	var wsID, runtimeID, agentID, taskID string
@@ -381,8 +381,7 @@ func seedTaskUsageFixture(t *testing.T, ctx context.Context, pool *pgxpool.Pool)
 	`, agentID, runtimeID).Scan(&taskID); err != nil {
 		// agent_task_queue schema may differ; fall back to inferring
 		// the smallest column set.
-		var altErr error
-		altErr = pool.QueryRow(ctx, `
+		var altErr error = pool.QueryRow(ctx, `
 			INSERT INTO agent_task_queue (agent_id, runtime_id)
 			VALUES ($1, $2)
 			RETURNING id

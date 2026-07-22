@@ -227,8 +227,8 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request, identity C
 		}
 	}
 	if len(runtimes) == 0 {
-		conn.WriteMessage(websocket.TextMessage, []byte(`{"error":"runtime_ids required"}`))
-		conn.Close()
+		_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"error":"runtime_ids required"}`))
+		_ = conn.Close()
 		return
 	}
 
@@ -347,7 +347,7 @@ func (h *Hub) notifyFrame(runtimeID string, data []byte, eventID string) (delive
 
 	for _, c := range slow {
 		h.unregister(c)
-		c.conn.Close()
+		_ = c.conn.Close()
 	}
 	if len(slow) > 0 {
 		M.SlowEvictionsTotal.Add(int64(len(slow)))
@@ -375,7 +375,7 @@ func (h *Hub) notifyWorkspaceFrame(workspaceID string, data []byte, eventID stri
 
 	for _, c := range slow {
 		h.unregister(c)
-		c.conn.Close()
+		_ = c.conn.Close()
 	}
 	if len(slow) > 0 {
 		M.SlowEvictionsTotal.Add(int64(len(slow)))
@@ -502,13 +502,13 @@ func (h *Hub) unregister(c *client) {
 func (c *client) readPump() {
 	defer func() {
 		c.hub.unregister(c)
-		c.conn.Close()
+		_ = c.conn.Close()
 	}()
 
 	c.conn.SetReadLimit(4096)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error {
-		c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
 
@@ -618,15 +618,15 @@ func (c *client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.conn.Close()
+		_ = c.conn.Close()
 	}()
 
 	for {
 		select {
 		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 			if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
@@ -634,7 +634,7 @@ func (c *client) writePump() {
 				return
 			}
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}

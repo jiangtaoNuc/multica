@@ -110,6 +110,17 @@ echo "==> [4/7] TypeScript unit tests..."
 pnpm test || { EXIT_CODE=1; exit 1; }
 
 # --------------------------------------------------------------------------
+# Step 4a: Go lint (golangci-lint)
+# --------------------------------------------------------------------------
+echo ""
+echo "==> [4a/7] Go static analysis (golangci-lint)..."
+if command -v golangci-lint >/dev/null 2>&1; then
+  (cd server && golangci-lint run ./...) || { EXIT_CODE=1; exit 1; }
+else
+  echo "    golangci-lint not found; skipping (install via https://golangci-lint.run/welcome/install/)"
+fi
+
+# --------------------------------------------------------------------------
 # Step 5: Go tests
 # --------------------------------------------------------------------------
 echo ""

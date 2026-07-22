@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -122,14 +121,14 @@ func normalizeLocalPath(p string) (string, error) {
 // fall back to the cleaned absolute form so callers can still proceed to
 // the existence-check stage which surfaces a clearer error.
 func resolveRealPath(absPath string) (string, error) {
-	real, err := filepath.EvalSymlinks(absPath)
+	resolved, err := filepath.EvalSymlinks(absPath)
 	if err != nil {
 		// validateLocalPath will surface the underlying error with better
 		// context; for the mutex key the cleaned absolute path is a safe
 		// fallback (it just slightly weakens the dedup on broken symlinks).
 		return absPath, nil
 	}
-	return real, nil
+	return resolved, nil
 }
 
 // validateLocalPath enforces the daemon-side preconditions for running an
@@ -323,21 +322,6 @@ func checkDirReadWrite(dir string) error {
 	_ = probe.Close()
 	_ = os.Remove(probePath)
 	return nil
-}
-
-// isGitWorkTree reports whether path is the working tree of a git repo. The
-// daemon uses this to skip branch / worktree machinery when the user has
-// already pointed the project at their own clone — the agent operates on
-// the current branch in place. Returns false on any error (git not on PATH,
-// path not in a repo, exec failure) so the caller can treat "not a git
-// tree" and "can't tell" the same way: skip the git-specific path.
-func isGitWorkTree(ctx context.Context, path string) bool {
-	cmd := exec.CommandContext(ctx, "git", "-C", path, "rev-parse", "--is-inside-work-tree")
-	out, err := cmd.Output()
-	if err != nil {
-		return false
-	}
-	return strings.TrimSpace(string(out)) == "true"
 }
 
 // LocalPathLocker serialises agent tasks that share the same on-disk path.

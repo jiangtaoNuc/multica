@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"math"
 	"net/http"
 	"net/netip"
 	"time"
@@ -34,7 +35,7 @@ import (
 // in-memory stores (model list, local skills, CLI update, etc.).
 func randomID() string {
 	b := make([]byte, 16)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	return hex.EncodeToString(b)
 }
 
@@ -227,7 +228,7 @@ func New(queries *db.Queries, txStarter txStarter, hub *realtime.Hub, bus *event
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 
 // writeMeasuredJSON behaves like writeJSON but returns the encoded body size so
@@ -653,7 +654,7 @@ func splitIdentifier(id string) *identifierParts {
 		}
 		num = num*10 + int(c-'0')
 	}
-	if num <= 0 {
+	if num <= 0 || num > math.MaxInt32 {
 		return nil
 	}
 	return &identifierParts{prefix: id[:idx], number: int32(num)}

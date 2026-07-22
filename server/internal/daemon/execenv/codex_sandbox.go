@@ -45,12 +45,12 @@ type codexSandboxPolicy struct {
 // codexSandboxPolicyFor picks the right policy for the given platform and
 // detected Codex CLI version.
 //
-// - Non-darwin: always workspace-write with network access (Landlock is not
-//   affected by the macOS Seatbelt bug).
-// - darwin with a version at or above CodexDarwinNetworkAccessFixedVersion:
-//   workspace-write with network access (upstream bug fixed).
-// - darwin otherwise (including when the version is unknown): fall back to
-//   danger-full-access so the Multica CLI can reach the API.
+//   - Non-darwin: always workspace-write with network access (Landlock is not
+//     affected by the macOS Seatbelt bug).
+//   - darwin with a version at or above CodexDarwinNetworkAccessFixedVersion:
+//     workspace-write with network access (upstream bug fixed).
+//   - darwin otherwise (including when the version is unknown): fall back to
+//     danger-full-access so the Multica CLI can reach the API.
 func codexSandboxPolicyFor(goos, detectedVersion string) codexSandboxPolicy {
 	if goos == "" {
 		goos = runtime.GOOS
@@ -266,9 +266,9 @@ func parseCodexSemver(raw string) (codexSemver, error) {
 		return codexSemver{}, fmt.Errorf("cannot parse version %q", raw)
 	}
 	maj, _ := strconv.Atoi(m[1])
-	min, _ := strconv.Atoi(m[2])
+	minor, _ := strconv.Atoi(m[2])
 	pat, _ := strconv.Atoi(m[3])
-	return codexSemver{Major: maj, Minor: min, Patch: pat}, nil
+	return codexSemver{Major: maj, Minor: minor, Patch: pat}, nil
 }
 
 func (v codexSemver) lessThan(o codexSemver) bool {
