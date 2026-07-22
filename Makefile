@@ -1,4 +1,4 @@
-.PHONY: help makehelp dev server daemon cli multica build lint test migrate-up migrate-down sqlc sqlc-check migrate-check seed clean setup start stop check worktree-env setup-main start-main stop-main check-main setup-worktree start-worktree stop-worktree check-worktree db-up db-down db-reset selfhost selfhost-build selfhost-stop vuln tidy-check
+.PHONY: help makehelp dev server daemon cli multica build lint test migrate-up migrate-down sqlc sqlc-check migrate-check seed clean setup start stop check worktree-env setup-main start-main stop-main check-main setup-worktree start-worktree stop-worktree check-worktree db-up db-down db-reset selfhost selfhost-build selfhost-stop openapi-lint generate-api openapi-drift vuln tidy-check
 
 # Some containers/installs keep the Go toolchain outside the default PATH.
 ifeq ($(shell command -v go 2>/dev/null),)
@@ -330,6 +330,18 @@ migrate-down: ## Create the target DB if needed, then roll back database migrati
 
 sqlc: ## Regenerate sqlc code
 	cd server && sqlc generate
+
+##@ OpenAPI
+
+openapi-lint: ## Lint the OpenAPI spec with Redocly
+	npx @redocly/cli lint server/api/openapi.yaml
+
+generate-api: ## Regenerate TypeScript client types from openapi.yaml
+	pnpm run generate:api
+
+openapi-drift: ## Fail if generated TS types are out of sync with openapi.yaml
+	pnpm run generate:api
+	@git diff --exit-code -- packages/core/api/generated.ts
 
 sqlc-check: ## Verify sqlc-generated code is up to date (fails if drift detected)
 	cd server && sqlc generate

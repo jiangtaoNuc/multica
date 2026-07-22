@@ -78,6 +78,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Lint OpenAPI spec
+        run: pnpm openapi-lint
+
+      - name: Verify generated API types are up to date
+        run: |
+          pnpm run generate:api
+          git diff --exit-code -- packages/core/api/generated.ts
+
       - name: Test self-host env derivation
         run: bash scripts/selfhost-config.test.sh
 

@@ -25,7 +25,9 @@
     "lint": "turbo lint --filter=!@multica/mobile",
     "clean": "turbo clean && rm -rf node_modules",
     "ui:add": "cd packages/ui && npx shadcn@latest add",
-    "generate:reserved-slugs": "node scripts/generate-reserved-slugs.mjs"
+    "generate:reserved-slugs": "node scripts/generate-reserved-slugs.mjs",
+    "generate:api": "openapi-typescript server/api/openapi.yaml -o packages/core/api/generated.ts",
+    "openapi-lint": "redocly lint server/api/openapi.yaml"
   },
   "packageManager": "pnpm@10.28.2",
   "pnpm": {
@@ -41,8 +43,10 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
+    "@redocly/cli": "^1.34.0",
     "@types/node": "catalog:",
     "@types/pg": "^8.20.0",
+    "openapi-typescript": "^7.5.2",
     "pg": "^8.20.0",
     "turbo": "^2.5.4",
     "typescript": "catalog:"
