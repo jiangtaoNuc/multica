@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -330,7 +331,7 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "failed to start transaction")
 		return
 	}
-	defer tx.Rollback(r.Context())
+	defer func() { _ = tx.Rollback(r.Context()) }()
 	qtx := h.Queries.WithTx(tx)
 
 	project, err := qtx.CreateProject(r.Context(), createParams)
@@ -342,10 +343,15 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	creator, _ := h.parseUserUUIDOrZero(userID)
 	resourceRows := make([]db.ProjectResource, 0, len(req.Resources))
 	for i, res := range req.Resources {
+		if i > math.MaxInt32 {
+			writeError(w, http.StatusBadRequest, "resources["+strconv.Itoa(i)+"]: position exceeds maximum allowed value")
+			return
+		}
 		var label pgtype.Text
 		if res.Label != nil && strings.TrimSpace(*res.Label) != "" {
 			label = pgtype.Text{String: strings.TrimSpace(*res.Label), Valid: true}
 		}
+		//nolint:gosec // Bounded by the MaxInt32 check above.
 		var position int32 = int32(i)
 		if res.Position != nil {
 			position = *res.Position
@@ -432,8 +438,7 @@ func (h *Handler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var rawFields map[string]json.RawMessage
-	json.Unmarshal(bodyBytes, &rawFields)
-
+	_ = json.Unmarshal(bodyBytes, &rawFields)
 	params := db.UpdateProjectParams{
 		ID:          prevProject.ID,
 		Description: prevProject.Description,

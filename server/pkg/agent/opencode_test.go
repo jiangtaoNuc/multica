@@ -914,6 +914,7 @@ func TestOpencodeBackendAnchorsDirAndPWD(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	<-session.Result
@@ -987,6 +988,7 @@ func TestOpencodeBackendInjectsThinkingVariant(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	<-session.Result
@@ -1052,6 +1054,7 @@ func TestOpencodeBackendDoesNotUsePermissionEnvOverride(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	<-session.Result
@@ -1105,6 +1108,7 @@ func TestOpencodeBackendQuestionDenySurvivesUserConfig(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	result := <-session.Result
@@ -1160,6 +1164,7 @@ func TestOpencodeBackendBlocksDirOverride(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	<-session.Result

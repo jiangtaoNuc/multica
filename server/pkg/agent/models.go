@@ -890,7 +890,7 @@ func discoverACPModels(ctx context.Context, executablePath string, p acpDiscover
 	}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		stdin.Close()
+		_ = stdin.Close()
 		return []Model{}, nil
 	}
 	// Discard stderr; noisy logs here don't help us and we don't
@@ -938,7 +938,7 @@ func discoverACPModels(ctx context.Context, executablePath string, p acpDiscover
 	if err != nil {
 		return []Model{}, nil
 	}
-	defer os.RemoveAll(tmp)
+	defer func() { _ = os.RemoveAll(tmp) }()
 
 	if err := writeACP(2, "session/new", map[string]any{
 		"cwd":        tmp,

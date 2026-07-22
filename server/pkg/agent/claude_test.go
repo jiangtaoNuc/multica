@@ -458,8 +458,7 @@ func TestBuildClaudeArgsFiltersBlockedCustomArgs(t *testing.T) {
 	// --output-format text should be stripped
 	for _, a := range args[len(args)-2:] {
 		if a == "text" {
-			// "text" should not be in the last args since --output-format was blocked
-			// The actual --output-format stream-json is earlier in the list
+			t.Fatalf("blocked --output-format value text should not appear in the last args: %v", args)
 		}
 	}
 	// --model o3 should pass through
@@ -760,6 +759,7 @@ func TestClaudeExecuteSurfacesStderrWhenChildExitsEarly(t *testing.T) {
 	// Drain message stream so the lifecycle goroutine can progress.
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -811,6 +811,7 @@ func TestClaudeExecuteRecordsResultModelUsage(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 

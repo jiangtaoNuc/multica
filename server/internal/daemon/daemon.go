@@ -2,12 +2,13 @@ package daemon
 
 import (
 	"context"
+	crand "crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"hash/fnv"
 	"log/slog"
-	"math/rand"
+	"math/big"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -1105,7 +1106,7 @@ func profileSetSignature(profiles []RuntimeProfile) string {
 	// Field separator chosen to never appear in a UUID, slug, or arg.
 	const sep = "\x1f"
 	for _, p := range sorted {
-		fmt.Fprintf(h, "%s%s%t%s%s%s%s%s%s%s",
+		_, _ = fmt.Fprintf(h, "%s%s%t%s%s%s%s%s%s%s",
 			p.ID, sep,
 			p.Enabled, sep,
 			p.ProtocolFamily, sep,
@@ -1113,7 +1114,7 @@ func profileSetSignature(profiles []RuntimeProfile) string {
 			p.Visibility, sep,
 		)
 		for _, a := range p.FixedArgs {
-			fmt.Fprintf(h, "%s%s", a, sep)
+			_, _ = fmt.Fprintf(h, "%s%s", a, sep)
 		}
 		// Record list end so [a,b] and [ab] hash differently.
 		h.Write([]byte("\x1e"))
@@ -1834,7 +1835,7 @@ func (d *Daemon) runRuntimeHeartbeat(ctx context.Context, rid string) {
 	}
 	// Jittered initial delay; cap at the interval so the first beat still
 	// happens within one period.
-	if jitter := time.Duration(rand.Int63n(int64(interval))); jitter > 0 {
+	if jitter := randDuration(int64(interval)); jitter > 0 {
 		select {
 		case <-ctx.Done():
 			return
@@ -2590,7 +2591,23 @@ func runtimePollOffset(runtimeID string, interval time.Duration) time.Duration {
 	}
 	h := fnv.New64a()
 	_, _ = h.Write([]byte(runtimeID))
-	return time.Duration(h.Sum64() % uint64(interval))
+	//nolint:gosec // G115: interval validated positive above; conversions are bounded.
+	ui := uint64(interval)
+	//nolint:gosec // G115: result modulo positive interval fits in int64/time.Duration.
+	return time.Duration(h.Sum64() % ui)
+}
+
+// randDuration returns a uniform duration in [0, upper). It uses crypto/rand
+// because the jitter values are used to desynchronize daemon heartbeats.
+func randDuration(upper int64) time.Duration {
+	if upper <= 0 {
+		return 0
+	}
+	n, err := crand.Int(crand.Reader, big.NewInt(upper))
+	if err != nil {
+		return 0
+	}
+	return time.Duration(n.Int64())
 }
 
 func capacityBackoff(pollInterval time.Duration) time.Duration {

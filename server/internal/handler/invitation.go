@@ -403,7 +403,7 @@ func (h *Handler) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "failed to accept invitation")
 		return
 	}
-	defer tx.Rollback(r.Context())
+	defer func() { _ = tx.Rollback(r.Context()) }()
 
 	qtx := h.Queries.WithTx(tx)
 

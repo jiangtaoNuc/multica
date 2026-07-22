@@ -1132,7 +1132,7 @@ func (s *TaskService) ClaimTaskForRuntime(ctx context.Context, runtimeID pgtype.
 // maybeLogClaimSlow emits one structured log per ClaimTask call when its total
 // latency exceeds 300ms, so the prod tail can be diagnosed without flooding
 // logs at normal poll rates. Called via defer so it captures the full path
-// including post-claim updateAgentStatus / broadcastTaskDispatch (both of
+// including post-claim status update / broadcastTaskDispatch (both of
 // which can hit the DB) and any error exit.
 func (s *TaskService) maybeLogClaimSlow(agentID pgtype.UUID, outcome string, start time.Time, getAgentMs, countRunningMs, claimAgentMs, updateStatusMs, dispatchMs int64) {
 	totalMs := time.Since(start).Milliseconds()
@@ -1828,7 +1828,7 @@ func (s *TaskService) runInTx(ctx context.Context, fn func(*db.Queries) error) e
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	if err := fn(s.Queries.WithTx(tx)); err != nil {
 		return err
 	}
@@ -1859,17 +1859,6 @@ func (s *TaskService) ReconcileAgentStatus(ctx context.Context, agentID pgtype.U
 		return
 	}
 	slog.Debug("agent status reconciled", "agent_id", util.UUIDToString(agentID), "status", agent.Status)
-	s.publishAgentStatus(agent)
-}
-
-func (s *TaskService) updateAgentStatus(ctx context.Context, agentID pgtype.UUID, status string) {
-	agent, err := s.Queries.UpdateAgentStatus(ctx, db.UpdateAgentStatusParams{
-		ID:     agentID,
-		Status: status,
-	})
-	if err != nil {
-		return
-	}
 	s.publishAgentStatus(agent)
 }
 
@@ -1992,7 +1981,7 @@ func (s *TaskService) notifyTaskAvailable(task db.AgentTaskQueue) {
 func (s *TaskService) broadcastTaskDispatch(ctx context.Context, task db.AgentTaskQueue) {
 	var payload map[string]any
 	if task.Context != nil {
-		json.Unmarshal(task.Context, &payload)
+		_ = json.Unmarshal(task.Context, &payload)
 	}
 	if payload == nil {
 		payload = map[string]any{}
@@ -2103,17 +2092,6 @@ func (s *TaskService) broadcastChatDone(ctx context.Context, task db.AgentTaskQu
 		ActorID:       "",
 		ChatSessionID: util.UUIDToString(task.ChatSessionID),
 		Payload:       payload,
-	})
-}
-
-func (s *TaskService) broadcastIssueUpdated(issue db.Issue) {
-	prefix := s.getIssuePrefix(issue.WorkspaceID)
-	s.Bus.Publish(events.Event{
-		Type:        protocol.EventIssueUpdated,
-		WorkspaceID: util.UUIDToString(issue.WorkspaceID),
-		ActorType:   "system",
-		ActorID:     "",
-		Payload:     map[string]any{"issue": issueToMap(issue, prefix)},
 	})
 }
 
@@ -2456,7 +2434,7 @@ func (s *TaskService) publishQuickCreateInbox(item db.InboxItem, workspaceID, ag
 func agentToMap(a db.Agent) map[string]any {
 	var rc any
 	if a.RuntimeConfig != nil {
-		json.Unmarshal(a.RuntimeConfig, &rc)
+		_ = json.Unmarshal(a.RuntimeConfig, &rc)
 	}
 	return map[string]any{
 		"id":                   util.UUIDToString(a.ID),

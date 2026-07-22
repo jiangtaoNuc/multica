@@ -1117,7 +1117,11 @@ func (pr *patResolver) ResolveToken(ctx context.Context, token string) (string, 
 
 	// Cache miss = first WS auth in this TTL window. Refresh last_used_at;
 	// subsequent connects within the window skip the write.
-	go pr.queries.UpdatePersonalAccessTokenLastUsed(context.Background(), pat.ID)
+	go func() {
+		if err := pr.queries.UpdatePersonalAccessTokenLastUsed(context.Background(), pat.ID); err != nil {
+			slog.Error("failed to update personal access token last used", "error", err)
+		}
+	}()
 
 	return userID, true
 }

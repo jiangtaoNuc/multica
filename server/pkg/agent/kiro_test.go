@@ -137,6 +137,7 @@ func TestKiroBackendSetModelFailureFailsTask(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -216,6 +217,7 @@ func TestKiroBackendClearsSessionIDWhenSetModelSessionNotFound(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -268,6 +270,7 @@ func TestKiroBackendInvokesACPWithTrustAllTools(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	<-session.Result
@@ -421,6 +424,7 @@ func TestKiroLoadIncludesMcpServersFromConfig(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	select {

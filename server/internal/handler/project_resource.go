@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"strings"
@@ -294,6 +295,11 @@ func (h *Handler) CreateProjectResource(w http.ResponseWriter, r *http.Request) 
 	} else {
 		// Append after existing resources.
 		count, _ := h.Queries.CountProjectResources(r.Context(), project.ID)
+		if count > math.MaxInt32 {
+			writeError(w, http.StatusBadRequest, "resource position exceeds maximum allowed value")
+			return
+		}
+		//nolint:gosec // Bounded by the MaxInt32 check above.
 		position = int32(count)
 	}
 

@@ -145,17 +145,17 @@ func attachmentDownloadPath(id string) string {
 //
 //  1. Persist `a.Url` only when the deployment has signaled the storage
 //     backend serves URLs publicly without per-request auth:
-//       - `Storage.CdnDomain()` is non-empty (operator configured a
-//         public-facing base URL — `S3_CDN_DOMAIN` for the S3 backend or
-//         `LOCAL_UPLOAD_BASE_URL` for LocalStorage), AND
-//       - `h.CFSigner` is nil (no per-request CloudFront signing — when
-//         signing is on, the same CDN domain serves PRIVATE content via
-//         time-bounded signed URLs and the raw `a.Url` is unauth-deny),
-//         AND
-//       - `a.Url` is itself an absolute http(s) URL with no signature
-//         query — defends against legacy rows backfilled while baseURL
-//         was unset, and against a freshly-signed `download_url` ever
-//         leaking into `a.Url` (the original MUL-3130 bug).
+//     - `Storage.CdnDomain()` is non-empty (operator configured a
+//     public-facing base URL — `S3_CDN_DOMAIN` for the S3 backend or
+//     `LOCAL_UPLOAD_BASE_URL` for LocalStorage), AND
+//     - `h.CFSigner` is nil (no per-request CloudFront signing — when
+//     signing is on, the same CDN domain serves PRIVATE content via
+//     time-bounded signed URLs and the raw `a.Url` is unauth-deny),
+//     AND
+//     - `a.Url` is itself an absolute http(s) URL with no signature
+//     query — defends against legacy rows backfilled while baseURL
+//     was unset, and against a freshly-signed `download_url` ever
+//     leaking into `a.Url` (the original MUL-3130 bug).
 //
 //  2. Every other shape — CloudFront-signed mode, S3 presign /proxy
 //     against a private bucket without a CDN domain, raw S3 / R2 /
@@ -331,14 +331,14 @@ func (h *Handler) UploadFile(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "file too large or invalid multipart form")
 		return
 	}
-	defer r.MultipartForm.RemoveAll()
+	defer func() { _ = r.MultipartForm.RemoveAll() }()
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
 		writeError(w, http.StatusBadRequest, fmt.Sprintf("missing file field: %v", err))
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Sniff actual content type from file bytes instead of trusting the client header.
 	buf := make([]byte, 512)
@@ -727,7 +727,7 @@ func (h *Handler) proxyAttachmentDownload(w http.ResponseWriter, r *http.Request
 		writeError(w, http.StatusNotFound, "attachment object not found")
 		return
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	if att.ContentType != "" {
 		w.Header().Set("Content-Type", att.ContentType)
@@ -783,7 +783,7 @@ func (h *Handler) GetAttachmentContent(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "attachment object not found")
 		return
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	// LimitReader to maxPreviewTextSize+1 so we can detect "exactly at the
 	// limit" vs "exceeds the limit" by checking the returned length.

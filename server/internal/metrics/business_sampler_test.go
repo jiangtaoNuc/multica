@@ -208,13 +208,13 @@ func TestBusinessSamplerCollectorBoundedCardinality(t *testing.T) {
 		// pre-normalizing here exactly the way refreshFromDB would.
 		snap := newSamplerSnapshot(refreshAt)
 		for i := 0; i < 50; i++ {
-			snap.taskQueued[NormalizeTaskSource("provider-from-user-input-"+string(rune('A'+i%26)))] += 1
+			snap.taskQueued[NormalizeTaskSource("provider-from-user-input-"+string(rune('A'+i%26)))]++
 		}
 		for i := 0; i < 50; i++ {
 			snap.runtimeOnline[runtimeOnlineKey{
 				runtimeMode: NormalizeRuntimeMode("rogue-mode"),
 				provider:    NormalizeRuntimeProvider("attacker-provider"),
-			}] += 1
+			}]++
 		}
 		return snap
 	})

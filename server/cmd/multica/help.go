@@ -24,11 +24,11 @@ func exactArgs(n int) cobra.PositionalArgs {
 	return func(cmd *cobra.Command, args []string) error {
 		if len(args) != n {
 			if n == 1 {
-				fmt.Fprintf(cmd.ErrOrStderr(), "Error: accepts 1 arg, received %d\n\n", len(args))
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Error: accepts 1 arg, received %d\n\n", len(args))
 			} else {
-				fmt.Fprintf(cmd.ErrOrStderr(), "Error: accepts %d args, received %d\n\n", n, len(args))
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Error: accepts %d args, received %d\n\n", n, len(args))
 			}
-			cmd.Help()
+			_ = cmd.Help()
 			return errSilent
 		}
 		return nil

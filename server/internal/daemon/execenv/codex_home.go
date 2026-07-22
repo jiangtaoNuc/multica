@@ -199,7 +199,7 @@ func ensureDirSymlink(src, dst string) error {
 			if err == nil && target == src {
 				return nil // already correct
 			}
-			os.Remove(dst)
+			_ = os.Remove(dst)
 		} else {
 			// Regular file/dir exists — don't overwrite.
 			return nil
@@ -316,20 +316,24 @@ func syncCopiedFile(src, dst string) error {
 }
 
 // copyFile copies src to dst unconditionally.
-func copyFile(src, dst string) error {
+func copyFile(src, dst string) (err error) {
 	in, err := os.Open(src)
 	if err != nil {
 		return fmt.Errorf("open %s: %w", src, err)
 	}
-	defer in.Close()
+	defer func() { _ = in.Close() }()
 
 	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
 	if err != nil {
 		return fmt.Errorf("create %s: %w", dst, err)
 	}
-	defer out.Close()
+	defer func() {
+		if cerr := out.Close(); cerr != nil && err == nil {
+			err = fmt.Errorf("close %s: %w", dst, cerr)
+		}
+	}()
 
-	if _, err := io.Copy(out, in); err != nil {
+	if _, err = io.Copy(out, in); err != nil {
 		return fmt.Errorf("copy %s → %s: %w", src, dst, err)
 	}
 	return nil

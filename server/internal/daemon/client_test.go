@@ -91,10 +91,7 @@ func noSleepRetry(t *testing.T) func() {
 	t.Helper()
 	prev := retrySleep
 	retrySleep = func(ctx context.Context, _ time.Duration) error {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-		return nil
+		return ctx.Err()
 	}
 	return func() { retrySleep = prev }
 }
@@ -167,7 +164,7 @@ func TestPostJSONWithRetry_TransientExhausts(t *testing.T) {
 	if !isTransientError(err) {
 		t.Fatalf("expected transient error, got %v", err)
 	}
-	if got := calls.Load(); got != int32(len(schedule)+1) {
+	if got := int64(calls.Load()); got != int64(len(schedule)+1) {
 		t.Fatalf("expected %d attempts (initial + %d retries), got %d", len(schedule)+1, len(schedule), got)
 	}
 }

@@ -146,7 +146,7 @@ func runIssueLabelRemove(cmd *cobra.Command, args []string) error {
 		if output == "json" {
 			return cli.PrintJSON(os.Stdout, map[string]any{"detached": true})
 		}
-		fmt.Fprintln(os.Stdout, "Label detached.")
+		_, _ = fmt.Fprintln(os.Stdout, "Label detached.")
 		return nil
 	}
 	labelsRaw, _ := result["labels"].([]any)

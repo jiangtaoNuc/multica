@@ -53,14 +53,14 @@ func TestExecuteBackfillUpdatesOnlyEligibleCodexRowsAndRebuildsRollup(t *testing
 	oldUpdatedAt := cutoff.Add(-24 * time.Hour)
 	newUpdatedAt := cutoff.Add(24 * time.Hour)
 
-	workspaceID, _, _, targetTaskID := seedBackfillTaskUsageFixture(t, ctx, pool, "target")
-	_, _, _, otherWorkspaceTaskID := seedBackfillTaskUsageFixture(t, ctx, pool, "other")
+	workspaceID, _, _, targetTaskID := seedBackfillTaskUsageFixture(ctx, t, pool, "target")
+	_, _, _, otherWorkspaceTaskID := seedBackfillTaskUsageFixture(ctx, t, pool, "other")
 
-	targetID := seedTaskUsageRow(t, ctx, pool, targetTaskID, "codex", "gpt-5-codex", 1000, 50, 300, createdAt, oldUpdatedAt)
-	postCutoffID := seedTaskUsageRow(t, ctx, pool, targetTaskID, "codex", "gpt-5-codex-new", 900, 50, 200, createdAt, newUpdatedAt)
-	nonCodexID := seedTaskUsageRow(t, ctx, pool, targetTaskID, "claude", "claude-test", 800, 50, 200, createdAt, oldUpdatedAt)
-	zeroCacheID := seedTaskUsageRow(t, ctx, pool, targetTaskID, "codex", "gpt-5-codex-no-cache", 700, 50, 0, createdAt, oldUpdatedAt)
-	otherWorkspaceID := seedTaskUsageRow(t, ctx, pool, otherWorkspaceTaskID, "codex", "gpt-5-codex-other-workspace", 600, 50, 100, createdAt, oldUpdatedAt)
+	targetID := seedTaskUsageRow(ctx, t, pool, targetTaskID, "codex", "gpt-5-codex", 1000, 50, 300, createdAt, oldUpdatedAt)
+	postCutoffID := seedTaskUsageRow(ctx, t, pool, targetTaskID, "codex", "gpt-5-codex-new", 900, 50, 200, createdAt, newUpdatedAt)
+	nonCodexID := seedTaskUsageRow(ctx, t, pool, targetTaskID, "claude", "claude-test", 800, 50, 200, createdAt, oldUpdatedAt)
+	zeroCacheID := seedTaskUsageRow(ctx, t, pool, targetTaskID, "codex", "gpt-5-codex-no-cache", 700, 50, 0, createdAt, oldUpdatedAt)
+	otherWorkspaceID := seedTaskUsageRow(ctx, t, pool, otherWorkspaceTaskID, "codex", "gpt-5-codex-other-workspace", 600, 50, 100, createdAt, oldUpdatedAt)
 
 	cfg := config{
 		cutoff:      cutoff,
@@ -78,7 +78,7 @@ func TestExecuteBackfillUpdatesOnlyEligibleCodexRowsAndRebuildsRollup(t *testing
 	if total.Rows != 1 || total.InputBefore != 1000 || total.InputAfter != 700 || total.Overcount != 300 {
 		t.Fatalf("unexpected dry-run total: %+v", total)
 	}
-	assertTaskUsageInput(t, ctx, pool, targetID, 1000)
+	assertTaskUsageInput(ctx, t, pool, targetID, 1000)
 
 	updateStartedAt, err := databaseClock(ctx, pool)
 	if err != nil {
@@ -107,11 +107,11 @@ func TestExecuteBackfillUpdatesOnlyEligibleCodexRowsAndRebuildsRollup(t *testing
 		t.Fatalf("expected hourly rollup rows to be touched")
 	}
 
-	assertTaskUsageInput(t, ctx, pool, targetID, 700)
-	assertTaskUsageInput(t, ctx, pool, postCutoffID, 900)
-	assertTaskUsageInput(t, ctx, pool, nonCodexID, 800)
-	assertTaskUsageInput(t, ctx, pool, zeroCacheID, 700)
-	assertTaskUsageInput(t, ctx, pool, otherWorkspaceID, 600)
+	assertTaskUsageInput(ctx, t, pool, targetID, 700)
+	assertTaskUsageInput(ctx, t, pool, postCutoffID, 900)
+	assertTaskUsageInput(ctx, t, pool, nonCodexID, 800)
+	assertTaskUsageInput(ctx, t, pool, zeroCacheID, 700)
+	assertTaskUsageInput(ctx, t, pool, otherWorkspaceID, 600)
 
 	var targetUpdatedAt time.Time
 	if err := pool.QueryRow(ctx, `SELECT updated_at FROM task_usage WHERE id = $1`, targetID).Scan(&targetUpdatedAt); err != nil {
@@ -146,8 +146,8 @@ func TestExecuteBackfillUpdatesOnlyEligibleCodexRowsAndRebuildsRollup(t *testing
 }
 
 func seedTaskUsageRow(
-	t *testing.T,
 	ctx context.Context,
+	t *testing.T,
 	pool *pgxpool.Pool,
 	taskID, provider, model string,
 	input, output, cacheRead int64,
@@ -169,7 +169,7 @@ func seedTaskUsageRow(
 	return id
 }
 
-func assertTaskUsageInput(t *testing.T, ctx context.Context, pool *pgxpool.Pool, id string, want int64) {
+func assertTaskUsageInput(ctx context.Context, t *testing.T, pool *pgxpool.Pool, id string, want int64) {
 	t.Helper()
 	var got int64
 	if err := pool.QueryRow(ctx, `SELECT input_tokens FROM task_usage WHERE id = $1`, id).Scan(&got); err != nil {
@@ -180,7 +180,7 @@ func assertTaskUsageInput(t *testing.T, ctx context.Context, pool *pgxpool.Pool,
 	}
 }
 
-func seedBackfillTaskUsageFixture(t *testing.T, ctx context.Context, pool *pgxpool.Pool, suffix string) (string, string, string, string) {
+func seedBackfillTaskUsageFixture(ctx context.Context, t *testing.T, pool *pgxpool.Pool, suffix string) (string, string, string, string) {
 	t.Helper()
 
 	var wsID, runtimeID, agentID, taskID string
