@@ -1,0 +1,105 @@
+version: "2"
+
+run:
+  modules-download-mode: readonly
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - revive
+    - staticcheck
+    - unused
+  settings:
+    gosec:
+      # Disable noisy rules that are false positives for this codebase:
+      # - G101: hardcoded credentials (triggers on constant/field names, not values)
+      # - G104: unhandled errors (duplicated by errcheck, which is already enabled)
+      # - G117/G118/G122/G124/G602/G702/G703/G704: v2 gosec taint/style rules that
+      #   fire on standard patterns (goroutines, filepath.Walk, http.Cookie,
+      #   slice indexing, shell resolution, path traversal in validated paths)
+      # - G204: subprocess with variable (commands are constructed from trusted config)
+      # - G301/G302/G306: directory/file permissions (intentional defaults)
+      # - G304: file path constructed from variable (paths come from validated inputs)
+      # G115 (integer overflow) and G109 (integer conversion) are kept.
+      excludes:
+        - G101
+        - G104
+        - G117
+        - G118
+        - G122
+        - G124
+        - G204
+        - G301
+        - G302
+        - G304
+        - G306
+        - G602
+        - G702
+        - G703
+        - G704
+    staticcheck:
+      # Keep only bug-finding checks for the initial gate. Style and quickfix
+      # checks are excluded to match the "severity only error" requirement.
+      checks:
+        - SA*
+    revive:
+      # Keep only rules that catch bugs or clearly incorrect code.
+      # Style-only rules (exported comments, var naming, unused params, etc.)
+      # are excluded to match the "severity only error, no style-only" initial gate.
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: if-return
+        - name: increment-decrement
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: indent-error-flow
+        - name: errorf
+        - name: empty-block
+        - name: superfluous-else
+        - name: unreachable-code
+        - name: redefines-builtin-id
+  exclusions:
+    generated: lax
+    rules:
+      # Test helpers and fixtures frequently ignore errors for brevity.
+      # Non-test code is still checked by errcheck.
+      - linters:
+          - errcheck
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+
+formatters:
+  # golangci-lint v2 separates formatting from linting. gofmt/goimports are
+  # configured here so the lint step still covers formatting via `fmt --diff`.
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+severity:
+  default: error

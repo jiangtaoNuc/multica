@@ -256,7 +256,7 @@ func (h *Handler) CreateSquad(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Auto-add leader as a member with role "leader".
-	h.Queries.AddSquadMember(r.Context(), db.AddSquadMemberParams{
+	_, _ = h.Queries.AddSquadMember(r.Context(), db.AddSquadMemberParams{
 		SquadID:    squad.ID,
 		MemberType: "agent",
 		MemberID:   leaderUUID,
@@ -348,7 +348,7 @@ func (h *Handler) UpdateSquad(w http.ResponseWriter, r *http.Request) {
 			SquadID: squad.ID, MemberType: "agent", MemberID: lid,
 		})
 		if !isMember {
-			h.Queries.AddSquadMember(r.Context(), db.AddSquadMemberParams{
+			_, _ = h.Queries.AddSquadMember(r.Context(), db.AddSquadMemberParams{
 				SquadID: squad.ID, MemberType: "agent", MemberID: lid, Role: "leader",
 			})
 		}

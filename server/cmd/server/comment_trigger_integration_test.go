@@ -339,15 +339,6 @@ func TestCommentTriggerOnComment(t *testing.T) {
 		// Reply mentioning the assignee agent.
 		content := fmt.Sprintf("[@Agent](mention://agent/%s) can you help with this?", agentID)
 		postComment(t, issueID, content, strPtr(threadID))
-		if n := countPendingTasks(t, issueID); n != 0 {
-			// The mention of the assignee agent unblocks on_comment but
-			// the assignee-mention path in on_mention skips the assignee.
-			// Either 0 or 1 is acceptable depending on the on_comment logic.
-			// With our implementation: isReplyToMemberThread returns false
-			// (assignee mentioned), and commentMentionsOthersButNotAssignee
-			// returns false (assignee is mentioned). So on_comment triggers.
-			// Let's re-check.
-		}
 		if n := countPendingTasks(t, issueID); n != 1 {
 			t.Errorf("expected 1 pending task (assignee mentioned in member thread), got %d", n)
 		}

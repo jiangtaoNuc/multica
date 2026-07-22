@@ -560,7 +560,7 @@ func (s *RegistrationService) finishSuccess(ctx context.Context, sess *registrat
 		sess.markError(RegistrationReasonInternalError, err.Error(), s.gcDeadline())
 		return
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.queries.WithTx(tx)
 
 	inst, err := qtx.UpsertLarkInstallation(ctx, db.UpsertLarkInstallationParams{

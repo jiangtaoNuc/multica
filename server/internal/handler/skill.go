@@ -247,10 +247,7 @@ func validateFilePath(p string) bool {
 		return false
 	}
 	cleaned := filepath.Clean(p)
-	if strings.HasPrefix(cleaned, "..") {
-		return false
-	}
-	return true
+	return !strings.HasPrefix(cleaned, "..")
 }
 
 func (h *Handler) loadSkillForUser(w http.ResponseWriter, r *http.Request, id string) (db.Skill, bool) {
@@ -448,7 +445,7 @@ func (h *Handler) UpdateSkill(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "failed to start transaction")
 		return
 	}
-	defer tx.Rollback(r.Context())
+	defer func() { _ = tx.Rollback(r.Context()) }()
 
 	qtx := h.Queries.WithTx(tx)
 
@@ -744,11 +741,11 @@ func fetchGitHubDefaultBranch(httpClient *http.Client, owner, repo string) strin
 	resp, err := doGitHubAPIGet(httpClient, apiURL)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		if resp != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 		return "main"
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var info githubRepoInfo
 	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil || info.DefaultBranch == "" {
@@ -832,7 +829,7 @@ func searchClawHubSkills(httpClient *http.Client, query string) ([]SkillSearchCa
 	if err != nil {
 		return nil, fmt.Errorf("failed to reach ClawHub: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("ClawHub search returned status %d", resp.StatusCode)
 	}
@@ -880,7 +877,7 @@ func fetchClawHubInstallCount(httpClient *http.Client, slug string) (int64, bool
 		slog.Warn("clawhub search: failed to fetch skill details", "slug", slug, "error", err)
 		return 0, false
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		slog.Warn("clawhub search: skill details returned non-200", "slug", slug, "status", resp.StatusCode)
 		return 0, false
@@ -909,7 +906,7 @@ func fetchFromClawHub(httpClient *http.Client, rawURL string) (*importedSkill, e
 	if err != nil {
 		return nil, fmt.Errorf("failed to reach ClawHub: %w", err)
 	}
-	defer skillResp.Body.Close()
+	defer func() { _ = skillResp.Body.Close() }()
 
 	if skillResp.StatusCode == http.StatusNotFound {
 		return nil, fmt.Errorf("skill not found on ClawHub: %s", slug)
@@ -937,7 +934,7 @@ func fetchFromClawHub(httpClient *http.Client, rawURL string) (*importedSkill, e
 		vURL := fmt.Sprintf("%s/skills/%s/versions/%s", apiBase, url.PathEscape(slug), url.PathEscape(latestVersion))
 		vResp, err := httpClient.Get(vURL)
 		if err == nil {
-			defer vResp.Body.Close()
+			defer func() { _ = vResp.Body.Close() }()
 			if vResp.StatusCode == http.StatusOK {
 				var vDetail clawhubVersionDetailResponse
 				if err := json.NewDecoder(vResp.Body).Decode(&vDetail); err == nil {
@@ -1090,11 +1087,11 @@ func fetchFromSkillsSh(httpClient *http.Client, rawURL string) (*importedSkill, 
 	if err != nil || dirResp.StatusCode != http.StatusOK {
 		// Can't list files — return what we have (SKILL.md only)
 		if dirResp != nil {
-			dirResp.Body.Close()
+			_ = dirResp.Body.Close()
 		}
 		return result, nil
 	}
-	defer dirResp.Body.Close()
+	defer func() { _ = dirResp.Body.Close() }()
 
 	var entries []githubContentEntry
 	if err := json.NewDecoder(dirResp.Body).Decode(&entries); err != nil {
@@ -1142,7 +1139,7 @@ func resolveGitHubSkillDirByName(httpClient *http.Client, owner, repo, defaultBr
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to inspect repository %s/%s for skill %s: %w", owner, repo, skillName, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return "", nil, fmt.Errorf("failed to inspect repository %s/%s for skill %s: HTTP %d", owner, repo, skillName, resp.StatusCode)
 	}
@@ -1197,7 +1194,7 @@ func collectGitHubFiles(httpClient *http.Client, entries []githubContentEntry, o
 				attrs := []any{"url", subURL}
 				if subResp != nil {
 					attrs = append(attrs, "status", subResp.StatusCode)
-					subResp.Body.Close()
+					_ = subResp.Body.Close()
 				}
 				if err != nil {
 					attrs = append(attrs, "error", err)
@@ -1207,11 +1204,11 @@ func collectGitHubFiles(httpClient *http.Client, entries []githubContentEntry, o
 			}
 			var subEntries []githubContentEntry
 			if err := json.NewDecoder(subResp.Body).Decode(&subEntries); err != nil {
-				subResp.Body.Close()
+				_ = subResp.Body.Close()
 				slog.Warn("github import: failed to decode subdirectory listing", "url", subURL, "error", err)
 				continue
 			}
-			subResp.Body.Close()
+			_ = subResp.Body.Close()
 			collectGitHubFiles(httpClient, subEntries, out, subURL)
 		}
 	}
@@ -1242,7 +1239,7 @@ func listGitHubSkillMdPaths(httpClient *http.Client, owner, repo, repoPath, ref 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
@@ -1289,7 +1286,7 @@ func collectGitHubSkillMdPaths(httpClient *http.Client, entries []githubContentE
 			attrs := []any{"url", subURL}
 			if subResp != nil {
 				attrs = append(attrs, "status", subResp.StatusCode)
-				subResp.Body.Close()
+				_ = subResp.Body.Close()
 			}
 			if err != nil {
 				attrs = append(attrs, "error", err)
@@ -1300,11 +1297,11 @@ func collectGitHubSkillMdPaths(httpClient *http.Client, entries []githubContentE
 
 		var subEntries []githubContentEntry
 		if err := json.NewDecoder(subResp.Body).Decode(&subEntries); err != nil {
-			subResp.Body.Close()
+			_ = subResp.Body.Close()
 			slog.Warn("github import: failed to decode skill metadata subdirectory", "url", subURL, "error", err)
 			continue
 		}
-		subResp.Body.Close()
+		_ = subResp.Body.Close()
 		collectGitHubSkillMdPaths(httpClient, subEntries, out, subURL)
 	}
 }
@@ -1581,7 +1578,7 @@ func githubRefExists(httpClient *http.Client, owner, repo, ref string) (bool, er
 	if err != nil {
 		return false, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	switch resp.StatusCode {
 	case http.StatusOK:
 		return true, nil
@@ -1656,11 +1653,11 @@ func fetchFromGitHub(httpClient *http.Client, rawURL string) (*importedSkill, er
 		// Keep this lenient: a private rate-limited request shouldn't fail
 		// an import that has already produced a valid SKILL.md.
 		if dirResp != nil {
-			dirResp.Body.Close()
+			_ = dirResp.Body.Close()
 		}
 		return result, nil
 	}
-	defer dirResp.Body.Close()
+	defer func() { _ = dirResp.Body.Close() }()
 
 	var entries []githubContentEntry
 	if err := json.NewDecoder(dirResp.Body).Decode(&entries); err != nil {
@@ -1716,7 +1713,7 @@ func fetchRawFile(httpClient *http.Client, fileURL string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
@@ -2157,7 +2154,7 @@ func (h *Handler) SetAgentSkills(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "failed to start transaction")
 		return
 	}
-	defer tx.Rollback(r.Context())
+	defer func() { _ = tx.Rollback(r.Context()) }()
 
 	qtx := h.Queries.WithTx(tx)
 
@@ -2212,7 +2209,7 @@ func (h *Handler) AddAgentSkills(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "failed to start transaction")
 		return
 	}
-	defer tx.Rollback(r.Context())
+	defer func() { _ = tx.Rollback(r.Context()) }()
 
 	qtx := h.Queries.WithTx(tx)
 	for _, skillID := range skillUUIDs {

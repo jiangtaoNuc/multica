@@ -3,6 +3,7 @@ package lark
 import (
 	"errors"
 	"fmt"
+	"math"
 
 	"google.golang.org/protobuf/encoding/protowire"
 )
@@ -31,6 +32,16 @@ import (
 // tests in ws_frame_test.go pin the exact byte sequence the SDK would
 // produce for a handful of canonical frames; that is the load-bearing
 // compatibility check.
+
+// appendInt32Varint encodes a non-negative int32 as a protobuf varint.
+// Lark frame service/method IDs are never negative, so a negative value
+// is treated as 0 to avoid producing an invalid wire value.
+func appendInt32Varint(buf []byte, v int32) []byte {
+	if v < 0 {
+		v = 0
+	}
+	return protowire.AppendVarint(buf, uint64(v)) //nolint:gosec // v is guarded non-negative above
+}
 
 const (
 	// FrameMethodControl identifies a frame whose Method=Control(0).
@@ -128,15 +139,15 @@ func (f *Frame) Marshal() []byte {
 	buf = protowire.AppendTag(buf, 2, protowire.VarintType)
 	buf = protowire.AppendVarint(buf, f.LogID)
 	buf = protowire.AppendTag(buf, 3, protowire.VarintType)
-	buf = protowire.AppendVarint(buf, uint64(uint32(f.Service)))
+	buf = appendInt32Varint(buf, f.Service)
 	buf = protowire.AppendTag(buf, 4, protowire.VarintType)
-	buf = protowire.AppendVarint(buf, uint64(uint32(f.Method)))
+	buf = appendInt32Varint(buf, f.Method)
 
 	// Repeated headers — emit one length-prefixed entry per FrameHeader.
 	// Empty Headers list emits nothing, matching the SDK guard.
 	for _, h := range f.Headers {
 		buf = protowire.AppendTag(buf, 5, protowire.BytesType)
-		buf = protowire.AppendVarint(buf, uint64(headerSize(h)))
+		buf = protowire.AppendVarint(buf, headerSize(h))
 		// Header.Key (field 1) and Header.Value (field 2) are both
 		// proto2 req — emit unconditionally.
 		buf = protowire.AppendTag(buf, 1, protowire.BytesType)
@@ -169,11 +180,12 @@ func (f *Frame) Marshal() []byte {
 	return buf
 }
 
-func headerSize(h FrameHeader) int {
+func headerSize(h FrameHeader) uint64 {
 	// Both fields are req and always emitted; their byte cost is
 	// tag + length-prefix(len) + len.
-	return protowire.SizeTag(1) + protowire.SizeBytes(len(h.Key)) +
-		protowire.SizeTag(2) + protowire.SizeBytes(len(h.Value))
+	//nolint:gosec // SizeTag/SizeBytes return non-negative protobuf wire sizes.
+	return uint64(protowire.SizeTag(1)) + uint64(protowire.SizeBytes(len(h.Key))) +
+		uint64(protowire.SizeTag(2)) + uint64(protowire.SizeBytes(len(h.Value)))
 }
 
 // UnmarshalFrame parses one binary protobuf message into a Frame.
@@ -221,6 +233,9 @@ func UnmarshalFrame(b []byte) (*Frame, error) {
 			if err := protowire.ParseError(m); err != nil {
 				return nil, fmt.Errorf("ws frame: consume service: %w", err)
 			}
+			if v > math.MaxInt32 {
+				return nil, fmt.Errorf("ws frame: service value overflows int32: %d", v)
+			}
 			f.Service = int32(v)
 			b = b[m:]
 		case 4: // Method int32
@@ -230,6 +245,9 @@ func UnmarshalFrame(b []byte) (*Frame, error) {
 			v, m := protowire.ConsumeVarint(b)
 			if err := protowire.ParseError(m); err != nil {
 				return nil, fmt.Errorf("ws frame: consume method: %w", err)
+			}
+			if v > math.MaxInt32 {
+				return nil, fmt.Errorf("ws frame: method value overflows int32: %d", v)
 			}
 			f.Method = int32(v)
 			b = b[m:]

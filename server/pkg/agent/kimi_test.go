@@ -66,7 +66,7 @@ func fakeKimiACPScript() string {
 #
 # Writes the full argv (one arg per line) to $KIMI_ARGS_FILE if that env
 # var is set, so tests can assert that the daemon invokes us with the
-# right flags (`+"`--yolo acp`"+`, not bare `+"`acp`"+`).
+# right flags (` + "`--yolo acp`" + `, not bare ` + "`acp`" + `).
 #
 # Then reads one JSON-RPC request per line from stdin, matches on the
 # method name, and writes back a canned response. Exits after set_model
@@ -124,6 +124,7 @@ func TestKimiBackendSetModelFailureFailsTask(t *testing.T) {
 	// Drain message stream so the lifecycle goroutine can progress.
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -206,6 +207,7 @@ func TestKimiBackendClearsSessionIDWhenSetModelSessionNotFound(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -267,6 +269,7 @@ func TestKimiBackendInvokesACPSubcommand(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	<-session.Result
@@ -317,6 +320,7 @@ func TestKimiResumeIncludesMcpServers(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	select {

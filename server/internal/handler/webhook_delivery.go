@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -156,6 +157,10 @@ func (h *Handler) ListAutopilotDeliveries(w http.ResponseWriter, r *http.Request
 	offset := int32(0)
 	if l := r.URL.Query().Get("limit"); l != "" {
 		if v, err := strconv.Atoi(l); err == nil && v > 0 {
+			if v > math.MaxInt32 {
+				v = math.MaxInt32
+			}
+			//nolint:gosec // v is clamped to [1, math.MaxInt32] before conversion.
 			limit = int32(v)
 		}
 	}
@@ -164,6 +169,10 @@ func (h *Handler) ListAutopilotDeliveries(w http.ResponseWriter, r *http.Request
 	}
 	if o := r.URL.Query().Get("offset"); o != "" {
 		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
+			if v > math.MaxInt32 {
+				v = math.MaxInt32
+			}
+			//nolint:gosec // v is clamped to [0, math.MaxInt32] before conversion.
 			offset = int32(v)
 		}
 	}

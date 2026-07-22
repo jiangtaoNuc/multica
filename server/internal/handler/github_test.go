@@ -250,8 +250,7 @@ func TestWebhook_MergedPR_AdvancesLinkedIssueToDone(t *testing.T) {
 		t.Fatalf("CreateIssue: %d %s", w.Code, w.Body.String())
 	}
 	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-
+	_ = json.NewDecoder(w.Body).Decode(&created)
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM issue_pull_request WHERE issue_id = $1`, created.ID)
 		testPool.Exec(ctx, `DELETE FROM github_pull_request WHERE workspace_id = $1`, testWorkspaceID)
@@ -361,8 +360,7 @@ func TestWebhook_MergedPR_PreservesCancelled(t *testing.T) {
 		t.Fatalf("CreateIssue: %d %s", w.Code, w.Body.String())
 	}
 	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-
+	_ = json.NewDecoder(w.Body).Decode(&created)
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM issue_pull_request WHERE issue_id = $1`, created.ID)
 		testPool.Exec(ctx, `DELETE FROM github_pull_request WHERE workspace_id = $1`, testWorkspaceID)
@@ -470,8 +468,7 @@ func TestWebhook_MergedPR_WaitsForOpenSibling(t *testing.T) {
 		t.Fatalf("CreateIssue: %d %s", w.Code, w.Body.String())
 	}
 	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-
+	_ = json.NewDecoder(w.Body).Decode(&created)
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM issue_pull_request WHERE issue_id = $1`, created.ID)
 		testPool.Exec(ctx, `DELETE FROM github_pull_request WHERE workspace_id = $1`, testWorkspaceID)
@@ -646,8 +643,7 @@ func TestWebhook_ClosedSiblingAfterMerge(t *testing.T) {
 		t.Fatalf("CreateIssue: %d %s", w.Code, w.Body.String())
 	}
 	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-
+	_ = json.NewDecoder(w.Body).Decode(&created)
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM issue_pull_request WHERE issue_id = $1`, created.ID)
 		testPool.Exec(ctx, `DELETE FROM github_pull_request WHERE workspace_id = $1`, testWorkspaceID)
@@ -714,8 +710,7 @@ func TestWebhook_AllClosedWithoutMerge(t *testing.T) {
 		t.Fatalf("CreateIssue: %d %s", w.Code, w.Body.String())
 	}
 	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-
+	_ = json.NewDecoder(w.Body).Decode(&created)
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM issue_pull_request WHERE issue_id = $1`, created.ID)
 		testPool.Exec(ctx, `DELETE FROM github_pull_request WHERE workspace_id = $1`, testWorkspaceID)
@@ -816,7 +811,7 @@ func TestWebhook_MergedPR_OnlyClosesIdentifiersWithClosingKeyword(t *testing.T) 
 			t.Fatalf("CreateIssue %q: %d %s", title, w.Code, w.Body.String())
 		}
 		var out IssueResponse
-		json.NewDecoder(w.Body).Decode(&out)
+		_ = json.NewDecoder(w.Body).Decode(&out)
 		return out
 	}
 	closes := createIssue("primary work")
@@ -902,8 +897,7 @@ func TestWebhook_MergedPR_TitlePrefixDoesNotClose(t *testing.T) {
 		t.Fatalf("CreateIssue: %d %s", w.Code, w.Body.String())
 	}
 	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-
+	_ = json.NewDecoder(w.Body).Decode(&created)
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM issue_pull_request WHERE issue_id = $1`, created.ID)
 		testPool.Exec(ctx, `DELETE FROM activity_log WHERE issue_id = $1`, created.ID)
@@ -963,8 +957,7 @@ func TestWebhook_MergedPR_BranchNameDoesNotClose(t *testing.T) {
 		t.Fatalf("CreateIssue: %d %s", w.Code, w.Body.String())
 	}
 	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-
+	_ = json.NewDecoder(w.Body).Decode(&created)
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM issue_pull_request WHERE issue_id = $1`, created.ID)
 		testPool.Exec(ctx, `DELETE FROM activity_log WHERE issue_id = $1`, created.ID)
@@ -1084,8 +1077,7 @@ func TestWebhook_CloseKeywordRemovedBeforeMergeDoesNotClose(t *testing.T) {
 		t.Fatalf("CreateIssue: %d %s", w.Code, w.Body.String())
 	}
 	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-
+	_ = json.NewDecoder(w.Body).Decode(&created)
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM issue_pull_request WHERE issue_id = $1`, created.ID)
 		testPool.Exec(ctx, `DELETE FROM activity_log WHERE issue_id = $1`, created.ID)
@@ -1133,7 +1125,7 @@ func TestWebhook_CloseKeywordRemovedBeforeMergeDoesNotClose(t *testing.T) {
 		t.Fatalf("CreateIssue second: %d %s", w.Code, w.Body.String())
 	}
 	var second IssueResponse
-	json.NewDecoder(w.Body).Decode(&second)
+	_ = json.NewDecoder(w.Body).Decode(&second)
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM issue_pull_request WHERE issue_id = $1`, second.ID)
 		testPool.Exec(ctx, `DELETE FROM activity_log WHERE issue_id = $1`, second.ID)
@@ -1193,8 +1185,7 @@ func TestWebhook_LinkOnlySiblingMergeAfterCloseKeywordPR(t *testing.T) {
 		t.Fatalf("CreateIssue: %d %s", w.Code, w.Body.String())
 	}
 	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-
+	_ = json.NewDecoder(w.Body).Decode(&created)
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM issue_pull_request WHERE issue_id = $1`, created.ID)
 		testPool.Exec(ctx, `DELETE FROM activity_log WHERE issue_id = $1`, created.ID)
@@ -1271,15 +1262,15 @@ func TestDerivePRMergeableState(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, clear := derivePRMergeableState(tc.action, tc.payload, tc.baseRefChanged)
+			got, cleared := derivePRMergeableState(tc.action, tc.payload, tc.baseRefChanged)
 			if got.Valid != tc.wantValid {
 				t.Errorf("Valid=%v want %v", got.Valid, tc.wantValid)
 			}
 			if got.String != tc.wantStr {
 				t.Errorf("String=%q want %q", got.String, tc.wantStr)
 			}
-			if clear != tc.wantClear {
-				t.Errorf("clear=%v want %v", clear, tc.wantClear)
+			if cleared != tc.wantClear {
+				t.Errorf("clear=%v want %v", cleared, tc.wantClear)
 			}
 		})
 	}
@@ -1407,7 +1398,7 @@ func fireCheckSuiteWebhookWithStatus(t *testing.T, secret string, installationID
 	}
 }
 
-func setupPRTestIssue(t *testing.T, ctx context.Context, secret string) (IssueResponse, int64) {
+func setupPRTestIssue(ctx context.Context, t *testing.T, secret string) (IssueResponse, int64) {
 	t.Helper()
 	t.Setenv("GITHUB_WEBHOOK_SECRET", secret)
 	w := httptest.NewRecorder()
@@ -1420,8 +1411,7 @@ func setupPRTestIssue(t *testing.T, ctx context.Context, secret string) (IssueRe
 		t.Fatalf("CreateIssue: %d %s", w.Code, w.Body.String())
 	}
 	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-
+	_ = json.NewDecoder(w.Body).Decode(&created)
 	installationID := int64(33445566) + int64(time.Now().UnixNano()%1000000)
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM github_pull_request_check_suite WHERE pr_id IN (SELECT id FROM github_pull_request WHERE workspace_id = $1)`, testWorkspaceID)
@@ -1453,7 +1443,7 @@ func TestWebhook_CheckSuite_AggregatesAcrossApps(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-aggregate-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	head := "abc1234567890"
 	firePullRequestWebhookWithHead(t, secret, created.Identifier, installationID, "ci-repo-a", 11, "opened", head, "")
@@ -1485,7 +1475,7 @@ func TestWebhook_CheckSuite_OldHeadIgnored(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-oldhead-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	oldHead := "old1111111111"
 	newHead := "new2222222222"
@@ -1530,7 +1520,7 @@ func TestWebhook_CheckSuite_LateOlderEventIgnored(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-ordering-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	head := "ord1234567890"
 	firePullRequestWebhookWithHead(t, secret, created.Identifier, installationID, "ci-repo-c", 33, "opened", head, "")
@@ -1561,7 +1551,7 @@ func TestWebhook_CheckSuite_QueuedCountsAsPending(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-pending-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	head := "pending1234567"
 	firePullRequestWebhookWithHead(t, secret, created.Identifier, installationID, "ci-repo-pending", 55, "opened", head, "")
@@ -1613,7 +1603,7 @@ func TestWebhook_CheckSuite_OutOfOrderReplaysOnPRUpsert(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-oooreplay-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	head := "oo01234567890"
 	// Suite event lands FIRST — the PR row does not exist yet.
@@ -1671,7 +1661,7 @@ func TestWebhook_CheckSuite_OutOfOrderStashKeepsNewer(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-stash-order-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	head := "stash01234567"
 	// Newer event lands FIRST while the PR row does not exist yet.
@@ -1706,7 +1696,7 @@ func TestWebhook_PullRequest_SynchronizeClearsMergeable(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-mergeable-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	// Open with no mergeable verdict, then a metadata event populates clean.
 	firePullRequestWebhookWithHead(t, secret, created.Identifier, installationID, "ci-repo-d", 44, "opened", "head1", "")
@@ -1747,7 +1737,7 @@ func TestWebhook_PullRequest_MetadataPreservesMergeable(t *testing.T) {
 	}
 	ctx := context.Background()
 	const secret = "ci-mergeable-preserve-secret"
-	created, installationID := setupPRTestIssue(t, ctx, secret)
+	created, installationID := setupPRTestIssue(ctx, t, secret)
 
 	// Open, then set a known verdict via a labeled event carrying clean.
 	firePullRequestWebhookWithHead(t, secret, created.Identifier, installationID, "ci-repo-e", 55, "opened", "headA", "")
@@ -2097,8 +2087,7 @@ func TestWebhook_MergedPR_ChildWithParent_NotifiesParent(t *testing.T) {
 		t.Fatalf("CreateIssue parent: %d %s", w.Code, w.Body.String())
 	}
 	var parent IssueResponse
-	json.NewDecoder(w.Body).Decode(&parent)
-
+	_ = json.NewDecoder(w.Body).Decode(&parent)
 	w = httptest.NewRecorder()
 	req = newRequest("POST", "/api/issues?workspace_id="+testWorkspaceID, map[string]any{
 		"title":           "PR-merge child " + time.Now().Format(time.RFC3339Nano),
@@ -2110,8 +2099,7 @@ func TestWebhook_MergedPR_ChildWithParent_NotifiesParent(t *testing.T) {
 		t.Fatalf("CreateIssue child: %d %s", w.Code, w.Body.String())
 	}
 	var child IssueResponse
-	json.NewDecoder(w.Body).Decode(&child)
-
+	_ = json.NewDecoder(w.Body).Decode(&child)
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM issue_pull_request WHERE issue_id IN ($1, $2)`, child.ID, parent.ID)
 		testPool.Exec(ctx, `DELETE FROM github_pull_request WHERE workspace_id = $1`, testWorkspaceID)
@@ -2710,8 +2698,7 @@ func TestWebhook_RoutesToRepoOwningWorkspace(t *testing.T) {
 		t.Fatalf("CreateIssue: %d %s", w.Code, w.Body.String())
 	}
 	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-
+	_ = json.NewDecoder(w.Body).Decode(&created)
 	const repoOwner, repoName = "route-acme", "route-widget"
 	repoURL := "https://github.com/" + repoOwner + "/" + repoName
 
@@ -2849,8 +2836,7 @@ func TestWebhook_RegistryDoesNotCaptureForeignAccount(t *testing.T) {
 	w := httptest.NewRecorder()
 	testHandler.CreateIssue(w, newRequest("POST", "/api/issues?workspace_id="+testWorkspaceID, map[string]any{"title": "foreign", "status": "todo"}))
 	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-
+	_ = json.NewDecoder(w.Body).Decode(&created)
 	// The installation maps to its OWN workspace (not the squatter), so when the
 	// gate refuses the registry it falls back here — a workspace with no
 	// matching issue — and the squatter genuinely gets zero links.

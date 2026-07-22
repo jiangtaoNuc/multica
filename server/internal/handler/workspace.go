@@ -51,14 +51,14 @@ type WorkspaceResponse struct {
 func workspaceToResponse(w db.Workspace) WorkspaceResponse {
 	var settings any
 	if w.Settings != nil {
-		json.Unmarshal(w.Settings, &settings)
+		_ = json.Unmarshal(w.Settings, &settings)
 	}
 	if settings == nil {
 		settings = map[string]any{}
 	}
 	var repos any
 	if w.Repos != nil {
-		json.Unmarshal(w.Repos, &repos)
+		_ = json.Unmarshal(w.Repos, &repos)
 	}
 	if repos == nil {
 		repos = []any{}
@@ -181,7 +181,7 @@ func (h *Handler) CreateWorkspace(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "failed to create workspace")
 		return
 	}
-	defer tx.Rollback(r.Context())
+	defer func() { _ = tx.Rollback(r.Context()) }()
 
 	issuePrefix := generateIssuePrefix(req.Name)
 	if req.IssuePrefix != nil && strings.TrimSpace(*req.IssuePrefix) != "" {

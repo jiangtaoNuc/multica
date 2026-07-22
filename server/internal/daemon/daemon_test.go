@@ -2061,7 +2061,7 @@ func TestReportTaskResult_TransientCompleteExhaustedDoesNotFallback(t *testing.T
 		Comment: "ok",
 	}, slog.Default())
 
-	if got := completeCalls.Load(); got != int32(len(defaultTerminalRetrySchedule)+1) {
+	if got := int64(completeCalls.Load()); got != int64(len(defaultTerminalRetrySchedule)+1) {
 		t.Fatalf("expected %d complete attempts, got %d", len(defaultTerminalRetrySchedule)+1, got)
 	}
 	if got := failCalls.Load(); got != 0 {

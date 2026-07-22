@@ -134,14 +134,14 @@ func runUserProfileUpdate(cmd *cobra.Command, _ []string) error {
 
 func printUserProfileTable(out *os.File, me map[string]any) {
 	w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
-	defer w.Flush()
+	defer func() { _ = w.Flush() }()
 
-	fmt.Fprintf(w, "ID\t%s\n", strVal(me, "id"))
-	fmt.Fprintf(w, "NAME\t%s\n", strVal(me, "name"))
-	fmt.Fprintf(w, "EMAIL\t%s\n", strVal(me, "email"))
+	_, _ = fmt.Fprintf(w, "ID\t%s\n", strVal(me, "id"))
+	_, _ = fmt.Fprintf(w, "NAME\t%s\n", strVal(me, "name"))
+	_, _ = fmt.Fprintf(w, "EMAIL\t%s\n", strVal(me, "email"))
 	desc := strVal(me, "profile_description")
 	if desc == "" {
 		desc = "(not set)"
 	}
-	fmt.Fprintf(w, "PROFILE DESCRIPTION\t%s\n", desc)
+	_, _ = fmt.Fprintf(w, "PROFILE DESCRIPTION\t%s\n", desc)
 }

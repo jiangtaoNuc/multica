@@ -1347,6 +1347,7 @@ func TestHermesBackendAttributesUsageToACPDefaultModel(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -1491,6 +1492,7 @@ func TestHermesBackendPromotesProviderErrorWithNonEmptyOutput(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -1638,6 +1640,7 @@ func TestHermesBackendClearsSessionIDWhenResumedSessionNotFound(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -1716,6 +1719,7 @@ func TestHermesBackendClearsSessionIDWhenSetModelSessionNotFound(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -1798,6 +1802,7 @@ func TestHermesBackendDoesNotPromoteOnTransientRetry(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 
@@ -2059,6 +2064,7 @@ func TestHermesSetModelPreservesCustomModelIDWithColon(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	select {
@@ -2111,6 +2117,7 @@ func TestHermesResumeIncludesMcpServers(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	select {
@@ -2169,6 +2176,7 @@ func TestHermesDropsRemoteMcpWhenCapabilityNotAdvertised(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	select {
@@ -2221,6 +2229,7 @@ func TestHermesKeepsRemoteMcpWhenCapabilityAdvertised(t *testing.T) {
 	}
 	go func() {
 		for range session.Messages {
+			continue // drain messages
 		}
 	}()
 	select {

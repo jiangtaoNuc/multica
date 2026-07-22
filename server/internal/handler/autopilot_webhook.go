@@ -840,7 +840,7 @@ func (h *Handler) finaliseDeliveryTerminal(
 	params := db.UpdateWebhookDeliveryTerminalParams{
 		ID:             id,
 		Status:         status,
-		ResponseStatus: pgtype.Int4{Int32: int32(httpStatus), Valid: true},
+		ResponseStatus: pgtype.Int4{Int32: int32(httpStatus), Valid: true}, //nolint:gosec // net/http status codes are bounded constants.
 		ResponseBody:   pgtype.Text{String: string(bodyJSON), Valid: true},
 	}
 	if errMsg != "" {
@@ -871,7 +871,7 @@ func (h *Handler) finaliseDeliveryWithRun(
 		ID:             id,
 		Status:         status,
 		AutopilotRunID: runID,
-		ResponseStatus: pgtype.Int4{Int32: int32(httpStatus), Valid: true},
+		ResponseStatus: pgtype.Int4{Int32: int32(httpStatus), Valid: true}, //nolint:gosec // net/http status codes are bounded constants.
 		ResponseBody:   pgtype.Text{String: string(bodyJSON), Valid: true},
 	}
 	if _, err := h.Queries.UpdateWebhookDeliveryDispatched(r.Context(), params); err != nil {

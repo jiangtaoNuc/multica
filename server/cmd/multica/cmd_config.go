@@ -42,13 +42,13 @@ func runConfigShow(cmd *cobra.Command, _ []string) error {
 	}
 
 	path, _ := cli.CLIConfigPathForProfile(profile)
-	fmt.Fprintf(os.Stdout, "Config file: %s\n", path)
+	_, _ = fmt.Fprintf(os.Stdout, "Config file: %s\n", path)
 	if profile != "" {
-		fmt.Fprintf(os.Stdout, "Profile:      %s\n", profile)
+		_, _ = fmt.Fprintf(os.Stdout, "Profile:      %s\n", profile)
 	}
-	fmt.Fprintf(os.Stdout, "server_url:   %s\n", valueOrDefault(cfg.ServerURL, "(not set)"))
-	fmt.Fprintf(os.Stdout, "app_url:      %s\n", valueOrDefault(cfg.AppURL, "(not set)"))
-	fmt.Fprintf(os.Stdout, "workspace_id: %s\n", valueOrDefault(cfg.WorkspaceID, "(not set)"))
+	_, _ = fmt.Fprintf(os.Stdout, "server_url:   %s\n", valueOrDefault(cfg.ServerURL, "(not set)"))
+	_, _ = fmt.Fprintf(os.Stdout, "app_url:      %s\n", valueOrDefault(cfg.AppURL, "(not set)"))
+	_, _ = fmt.Fprintf(os.Stdout, "workspace_id: %s\n", valueOrDefault(cfg.WorkspaceID, "(not set)"))
 	return nil
 }
 
