@@ -41,6 +41,7 @@ Closes #
 - [ ] If I changed handlers or schemas, I ran `pnpm run generate:api` and committed the generated artifacts
 - [ ] New or updated migrations include a `.down.sql` file
 - [ ] I have added or updated tests where applicable
+- [ ] If I added/modified an API handler, I updated `server/api/openapi.yaml` and ran `pnpm run generate:api`
 - [ ] If this change affects the UI, I have included before/after screenshots
 - [ ] I have updated relevant documentation to reflect my changes
 - [ ] If I added a new runtime / coding tool / UI tab, I synced the change to **landing copy** (`apps/web/features/landing/i18n/`) and **relevant docs** (`apps/docs/content/docs/`)

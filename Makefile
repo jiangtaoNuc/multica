@@ -1,4 +1,11 @@
-.PHONY: help makehelp dev server daemon cli multica build test coverage migrate-up migrate-down sqlc sqlc-check migrate-check seed clean setup start stop check worktree-env setup-main start-main stop-main check-main setup-worktree start-worktree stop-worktree check-worktree db-up db-down db-reset selfhost selfhost-build selfhost-stop
+.PHONY: help makehelp dev server daemon cli multica build lint test coverage migrate-up migrate-down sqlc sqlc-check migrate-check seed clean setup start stop check worktree-env setup-main start-main stop-main check-main setup-worktree start-worktree stop-worktree check-worktree db-up db-down db-reset selfhost selfhost-build selfhost-stop openapi-lint generate-api openapi-drift vuln tidy-check
+
+# Some containers/installs keep the Go toolchain outside the default PATH.
+ifeq ($(shell command -v go 2>/dev/null),)
+  ifneq ($(wildcard /usr/local/go/bin/go),)
+    export PATH := /usr/local/go/bin:$(PATH)
+  endif
+endif
 
 MAIN_ENV_FILE ?= .env
 WORKTREE_ENV_FILE ?= .env.worktree
@@ -200,7 +207,7 @@ stop: ## Stop backend and frontend processes for the current checkout
 			echo "✓ App processes stopped. Remote PostgreSQL was not affected." ;; \
 	esac
 
-check: ## Run typecheck, TS tests, Go tests, and Playwright E2E for the current checkout
+check: tidy-check vuln ## Run typecheck, TS tests, Go tests, and Playwright E2E for the current checkout
 	$(REQUIRE_ENV)
 	@ENV_FILE="$(ENV_FILE)" bash scripts/check.sh
 
@@ -292,6 +299,9 @@ build: ## Build the server, CLI, and migrate binaries into server/bin
 	cd server && go build -ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(DATE)" -o bin/multica ./cmd/multica
 	cd server && go build -o bin/migrate ./cmd/migrate
 
+lint: ## Run golangci-lint static analysis on the Go backend
+	cd server && golangci-lint run ./...
+
 test: ## Run Go tests after ensuring the target DB exists and migrations are applied
 	$(REQUIRE_ENV)
 	@bash scripts/ensure-postgres.sh "$(ENV_FILE)"
@@ -305,6 +315,13 @@ coverage: ## Run Go tests with atomic coverage, upload no artifact; check core p
 	cd server && go test -race -covermode=atomic -coverprofile=coverage.out ./...
 	@cd server && go tool cover -func=coverage.out | tail -1
 	@bash scripts/coverage-check.sh server/coverage.out
+
+vuln: ## Run govulncheck against the Go backend; fails on HIGH/CRITICAL severity
+	@bash scripts/govulncheck.sh
+
+tidy-check: ## Verify server/go.mod and server/go.sum have no drift from go mod tidy
+	@cd server && go mod tidy
+	@git diff --exit-code -- server/go.mod server/go.sum
 
 # Database
 ##@ Database
@@ -321,6 +338,18 @@ migrate-down: ## Create the target DB if needed, then roll back database migrati
 
 sqlc: ## Regenerate sqlc code
 	cd server && sqlc generate
+
+##@ OpenAPI
+
+openapi-lint: ## Lint the OpenAPI spec with Redocly
+	npx @redocly/cli lint server/api/openapi.yaml
+
+generate-api: ## Regenerate TypeScript client types from openapi.yaml
+	pnpm run generate:api
+
+openapi-drift: ## Fail if generated TS types are out of sync with openapi.yaml
+	pnpm run generate:api
+	@git diff --exit-code -- packages/core/api/generated.ts
 
 sqlc-check: ## Verify sqlc-generated code is up to date (fails if drift detected)
 	cd server && sqlc generate

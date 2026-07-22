@@ -233,7 +233,7 @@ func fetchReleaseByTag(tag string) (*GitHubRelease, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("GitHub API returned %d", resp.StatusCode)
@@ -259,7 +259,7 @@ func FetchLatestRelease() (*GitHubRelease, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("GitHub API returned %d", resp.StatusCode)
@@ -345,7 +345,7 @@ func fetchURLBytes(url string, timeout time.Duration) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("HTTP %d from %s", resp.StatusCode, url)
 	}
@@ -442,27 +442,26 @@ func UpdateViaDownloadWithTimeout(targetVersion string, downloadTimeout time.Dur
 	tmpPath := tmpFile.Name()
 
 	if _, err := tmpFile.Write(binaryData); err != nil {
-		tmpFile.Close()
-		os.Remove(tmpPath)
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpPath)
 		return "", fmt.Errorf("write temp file: %w", err)
 	}
-	tmpFile.Close()
-
+	_ = tmpFile.Close()
 	// Preserve original file permissions.
 	info, err := os.Stat(exePath)
 	if err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return "", fmt.Errorf("stat original binary: %w", err)
 	}
 	if err := os.Chmod(tmpPath, info.Mode()); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return "", fmt.Errorf("chmod temp file: %w", err)
 	}
 
 	// Replace the original binary. On Windows this moves the running executable
 	// aside first; on Unix a plain rename over the running inode is fine.
 	if err := replaceBinary(tmpPath, exePath); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return "", fmt.Errorf("replace binary: %w", err)
 	}
 
@@ -476,7 +475,7 @@ func extractBinaryFromTarGz(r io.Reader, name string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("gzip reader: %w", err)
 	}
-	defer gz.Close()
+	defer func() { _ = gz.Close() }()
 
 	tr := tar.NewReader(gz)
 	for {
@@ -518,7 +517,7 @@ func extractBinaryFromZip(r io.Reader, name string) ([]byte, error) {
 			if err != nil {
 				return nil, fmt.Errorf("open zip entry: %w", err)
 			}
-			defer rc.Close()
+			defer func() { _ = rc.Close() }()
 
 			data, err := io.ReadAll(rc)
 			if err != nil {

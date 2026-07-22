@@ -86,7 +86,7 @@ func attachRealtimeTestClient(hub *Hub, scopeType, scopeID string) *Client {
 		send:          make(chan []byte, 2),
 		workspaceID:   "workspace-1",
 		userID:        "user-1",
-		subscriptions: map[scopeKey]bool{},
+		subscriptions: map[ScopeKey]bool{},
 	}
 	key := sk(scopeType, scopeID)
 	client.subscriptions[key] = true

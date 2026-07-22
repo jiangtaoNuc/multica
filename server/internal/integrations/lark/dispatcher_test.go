@@ -925,13 +925,13 @@ func TestDispatcher_AgentOfflineRepliesAtFlush(t *testing.T) {
 	}
 	chat := &fakeChat{ensureID: sessionID, appendResult: AppendResult{}}
 	enq := &fakeEnqueuer{err: service.ErrChatTaskAgentNoRuntime}
-	cap := &captureReply{}
+	capReply := &captureReply{}
 	d := &Dispatcher{
 		Queries:     queries,
 		Chat:        chat,
 		Audit:       &fakeAudit{},
 		TaskService: enq,
-		FlushReply:  cap.reply,
+		FlushReply:  capReply.reply,
 	}
 
 	res, err := d.Handle(context.Background(), InboundMessage{
@@ -950,14 +950,14 @@ func TestDispatcher_AgentOfflineRepliesAtFlush(t *testing.T) {
 	if enq.called != 1 {
 		t.Fatalf("flush must call EnqueueChatTask exactly once; called=%d", enq.called)
 	}
-	if cap.count != 1 {
-		t.Fatalf("expected exactly one flush reply; got %d", cap.count)
+	if capReply.count != 1 {
+		t.Fatalf("expected exactly one flush reply; got %d", capReply.count)
 	}
-	if cap.results[0].Outcome != OutcomeAgentOffline {
-		t.Fatalf("expected OutcomeAgentOffline at flush, got %q", cap.results[0].Outcome)
+	if capReply.results[0].Outcome != OutcomeAgentOffline {
+		t.Fatalf("expected OutcomeAgentOffline at flush, got %q", capReply.results[0].Outcome)
 	}
-	if cap.results[0].ChatSessionID != sessionID {
-		t.Fatalf("session id not propagated to flush reply: %+v", cap.results[0].ChatSessionID)
+	if capReply.results[0].ChatSessionID != sessionID {
+		t.Fatalf("session id not propagated to flush reply: %+v", capReply.results[0].ChatSessionID)
 	}
 }
 
@@ -970,13 +970,13 @@ func TestDispatcher_AgentArchivedRepliesAtFlush(t *testing.T) {
 	}
 	chat := &fakeChat{ensureID: sessionID, appendResult: AppendResult{}}
 	enq := &fakeEnqueuer{err: service.ErrChatTaskAgentArchived}
-	cap := &captureReply{}
+	capReply := &captureReply{}
 	d := &Dispatcher{
 		Queries:     queries,
 		Chat:        chat,
 		Audit:       &fakeAudit{},
 		TaskService: enq,
-		FlushReply:  cap.reply,
+		FlushReply:  capReply.reply,
 	}
 
 	res, err := d.Handle(context.Background(), InboundMessage{
@@ -992,8 +992,8 @@ func TestDispatcher_AgentArchivedRepliesAtFlush(t *testing.T) {
 	if res.Outcome != OutcomeIngested {
 		t.Fatalf("synchronous outcome must be ingested, got %q", res.Outcome)
 	}
-	if cap.count != 1 || cap.results[0].Outcome != OutcomeAgentArchived {
-		t.Fatalf("expected OutcomeAgentArchived at flush, got count=%d results=%+v", cap.count, cap.results)
+	if capReply.count != 1 || capReply.results[0].Outcome != OutcomeAgentArchived {
+		t.Fatalf("expected OutcomeAgentArchived at flush, got count=%d results=%+v", capReply.count, capReply.results)
 	}
 }
 
@@ -1013,13 +1013,13 @@ func TestDispatcher_FlushInfraFailureIsNotReplied(t *testing.T) {
 	chat := &fakeChat{ensureID: sessionID, appendResult: AppendResult{}}
 	infraErr := errors.New("create chat task: connection refused")
 	enq := &fakeEnqueuer{err: infraErr}
-	cap := &captureReply{}
+	capReply := &captureReply{}
 	d := &Dispatcher{
 		Queries:     queries,
 		Chat:        chat,
 		Audit:       &fakeAudit{},
 		TaskService: enq,
-		FlushReply:  cap.reply,
+		FlushReply:  capReply.reply,
 	}
 
 	res, err := d.Handle(context.Background(), InboundMessage{
@@ -1038,8 +1038,8 @@ func TestDispatcher_FlushInfraFailureIsNotReplied(t *testing.T) {
 	if enq.called != 1 {
 		t.Fatalf("flush must attempt EnqueueChatTask once; called=%d", enq.called)
 	}
-	if cap.count != 0 {
-		t.Fatalf("infra failure must not emit any offline/archived card; replies=%d", cap.count)
+	if capReply.count != 0 {
+		t.Fatalf("infra failure must not emit any offline/archived card; replies=%d", capReply.count)
 	}
 }
 

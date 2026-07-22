@@ -5,7 +5,7 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha1"
+	"crypto/sha1" //nolint:gosec // AWS CloudFront signed URLs require SHA1.
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
@@ -144,7 +144,7 @@ func (s *CloudFrontSigner) SignedCookies(expiry time.Time) []*http.Cookie {
 
 	encodedPolicy := cfBase64Encode([]byte(policy))
 
-	h := sha1.New()
+	h := sha1.New() //nolint:gosec // AWS CloudFront signed URLs require SHA1.
 	h.Write([]byte(policy))
 	sig, err := rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA1, h.Sum(nil))
 	if err != nil {
@@ -180,7 +180,7 @@ func (s *CloudFrontSigner) SignedURL(rawURL string, expiry time.Time) string {
 
 	encodedPolicy := cfBase64Encode([]byte(policy))
 
-	h := sha1.New()
+	h := sha1.New() //nolint:gosec // AWS CloudFront signed URLs require SHA1.
 	h.Write([]byte(policy))
 	sig, err := rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA1, h.Sum(nil))
 	if err != nil {

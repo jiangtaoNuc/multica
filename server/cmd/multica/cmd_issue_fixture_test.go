@@ -230,4 +230,3 @@ func TestCLICommentAddFixture(t *testing.T) {
 		t.Errorf("expected stderr to contain 'Comment added', got %q", stderr)
 	}
 }
-

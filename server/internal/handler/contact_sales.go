@@ -247,24 +247,24 @@ func (h *Handler) CreateContactSales(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func requireTrimmedField(w http.ResponseWriter, raw, field string, max int) (string, bool) {
+func requireTrimmedField(w http.ResponseWriter, raw, field string, maxLen int) (string, bool) {
 	v := strings.TrimSpace(raw)
 	if v == "" {
 		writeError(w, http.StatusBadRequest, field+" is required")
 		return "", false
 	}
-	if len(v) > max {
+	if len(v) > maxLen {
 		writeError(w, http.StatusBadRequest, field+" is too long")
 		return "", false
 	}
 	return v, true
 }
 
-func truncateString(s string, max int) string {
-	if len(s) <= max {
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
 		return s
 	}
-	return s[:max]
+	return s[:maxLen]
 }
 
 // canonicalBusinessEmail parses raw user input with net/mail and returns the

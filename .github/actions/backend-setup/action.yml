@@ -1,0 +1,35 @@
+name: Backend Setup
+description: Setup Go with module and build cache, shared by backend jobs (caller must checkout first)
+
+inputs:
+  go-version:
+    description: Go version to install
+    required: false
+    default: "1.26.1"
+
+outputs:
+  start-time:
+    description: Unix timestamp recorded at setup start, for job-duration reporting
+    value: ${{ steps.timer.outputs.start }}
+
+runs:
+  using: composite
+  steps:
+    - name: Record start time
+      id: timer
+      shell: bash
+      run: echo "start=$(date +%s)" >> "$GITHUB_OUTPUT"
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go-version }}
+        cache-dependency-path: server/go.sum
+
+    - name: Go build cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/go-build
+        key: ${{ runner.os }}-go-build-${{ hashFiles('server/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-build-

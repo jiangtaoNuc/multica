@@ -135,7 +135,7 @@ type RedisRelay struct {
 	nodeID   string
 
 	mu        sync.Mutex
-	consumers map[scopeKey]*scopeConsumer
+	consumers map[ScopeKey]*scopeConsumer
 	stopping  bool
 	wg        sync.WaitGroup
 
@@ -166,7 +166,7 @@ func NewRedisRelayWithClients(hub *Hub, writeRDB, readRDB *redis.Client) *RedisR
 		writeRDB:  writeRDB,
 		readRDB:   readRDB,
 		nodeID:    ulid.Make().String(),
-		consumers: make(map[scopeKey]*scopeConsumer),
+		consumers: make(map[ScopeKey]*scopeConsumer),
 	}
 }
 

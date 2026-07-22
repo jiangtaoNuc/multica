@@ -263,6 +263,6 @@ func runLabelDelete(cmd *cobra.Command, args []string) error {
 	if output, _ := cmd.Flags().GetString("output"); output == "json" {
 		return cli.PrintJSON(os.Stdout, map[string]any{"id": labelRef.ID, "deleted": true})
 	}
-	fmt.Fprintf(os.Stdout, "Label %s deleted.\n", labelRef.Display)
+	_, _ = fmt.Fprintf(os.Stdout, "Label %s deleted.\n", labelRef.Display)
 	return nil
 }

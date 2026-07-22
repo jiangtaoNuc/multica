@@ -179,10 +179,10 @@ func (b *geminiBackend) accumulateUsage(usage map[string]TokenUsage, stats *gemi
 // ── Gemini stream-json event types ──
 
 type geminiStreamEvent struct {
-	Type      string          `json:"type"`
-	Timestamp string          `json:"timestamp,omitempty"`
-	SessionID string          `json:"session_id,omitempty"`
-	Model     string          `json:"model,omitempty"`
+	Type      string `json:"type"`
+	Timestamp string `json:"timestamp,omitempty"`
+	SessionID string `json:"session_id,omitempty"`
+	Model     string `json:"model,omitempty"`
 
 	// message fields
 	Role    string `json:"role,omitempty"`
@@ -213,12 +213,12 @@ type geminiStreamError struct {
 }
 
 type geminiStreamStats struct {
-	TotalTokens  int                          `json:"total_tokens"`
-	InputTokens  int                          `json:"input_tokens"`
-	OutputTokens int                          `json:"output_tokens"`
-	DurationMs   int                          `json:"duration_ms"`
-	ToolCalls    int                          `json:"tool_calls"`
-	Models       map[string]geminiModelStats  `json:"models,omitempty"`
+	TotalTokens  int                         `json:"total_tokens"`
+	InputTokens  int                         `json:"input_tokens"`
+	OutputTokens int                         `json:"output_tokens"`
+	DurationMs   int                         `json:"duration_ms"`
+	ToolCalls    int                         `json:"tool_calls"`
+	Models       map[string]geminiModelStats `json:"models,omitempty"`
 }
 
 type geminiModelStats struct {
@@ -239,6 +239,7 @@ type geminiModelStats struct {
 //	-o stream-json        streaming NDJSON output for live events
 //	-m <model>            optional model override
 //	-r <session>          resume a previous session (if provided)
+//
 // geminiBlockedArgs are flags hardcoded by the daemon that must not be
 // overridden by user-configured custom_args.
 var geminiBlockedArgs = map[string]blockedArgMode{

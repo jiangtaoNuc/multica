@@ -51,11 +51,11 @@ func HandoffSupported(cliVersion string) bool {
 	if err != nil {
 		return false
 	}
-	min, err := parseSemver(MinHandoffCLIVersion)
+	minimum, err := parseSemver(MinHandoffCLIVersion)
 	if err != nil {
 		return false
 	}
-	return !parsed.lessThan(min)
+	return !parsed.lessThan(minimum)
 }
 
 // Errors returned by CheckMinCLIVersion. Callers branch on these to surface
@@ -93,12 +93,12 @@ func CheckMinCLIVersion(detected string) error {
 	if err != nil {
 		return ErrCLIVersionMissing
 	}
-	min, err := parseSemver(MinQuickCreateCLIVersion)
+	minimum, err := parseSemver(MinQuickCreateCLIVersion)
 	if err != nil {
 		// Misconfiguration in the constant itself — fail closed as missing.
 		return ErrCLIVersionMissing
 	}
-	if parsed.lessThan(min) {
+	if parsed.lessThan(minimum) {
 		return ErrCLIVersionTooOld
 	}
 	return nil
@@ -143,7 +143,7 @@ func CheckMinVersion(agentType, detectedVersion string) error {
 	if !ok {
 		return nil
 	}
-	min, err := parseSemver(minRaw)
+	minimum, err := parseSemver(minRaw)
 	if err != nil {
 		return fmt.Errorf("invalid minimum version %q for %s: %w", minRaw, agentType, err)
 	}
@@ -151,7 +151,7 @@ func CheckMinVersion(agentType, detectedVersion string) error {
 	if err != nil {
 		return fmt.Errorf("cannot parse detected %s version %q: %w", agentType, detectedVersion, err)
 	}
-	if detected.lessThan(min) {
+	if detected.lessThan(minimum) {
 		return fmt.Errorf("%s version %s is below minimum required %s — please upgrade", agentType, detectedVersion, minRaw)
 	}
 	return nil

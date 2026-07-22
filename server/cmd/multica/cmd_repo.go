@@ -251,7 +251,7 @@ func runRepoAdd(cmd *cobra.Command, args []string) error {
 		return cli.PrintJSON(os.Stdout, result)
 	}
 	if len(added) == 0 && len(updated) == 0 {
-		fmt.Fprintln(os.Stdout, "No repository changes.")
+		_, _ = fmt.Fprintln(os.Stdout, "No repository changes.")
 		return nil
 	}
 	rows := make([][]string, 0, len(added)+len(updated))
@@ -372,7 +372,7 @@ func runRepoCheckout(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("connect to daemon: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, _ := io.ReadAll(resp.Body)
 
@@ -388,8 +388,8 @@ func runRepoCheckout(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("parse response: %w", err)
 	}
 
-	fmt.Fprintf(os.Stdout, "%s\n", result.Path)
-	fmt.Fprintf(os.Stderr, "Checked out %s → %s (branch: %s)\n", repoURL, result.Path, result.BranchName)
+	_, _ = fmt.Fprintf(os.Stdout, "%s\n", result.Path)
+	_, _ = fmt.Fprintf(os.Stderr, "Checked out %s → %s (branch: %s)\n", repoURL, result.Path, result.BranchName)
 
 	return nil
 }

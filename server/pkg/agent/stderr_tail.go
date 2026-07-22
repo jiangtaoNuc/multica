@@ -24,18 +24,18 @@ const agentStderrTailBytes = 2048
 // Result.Error via withAgentStderr. That makes root-causing CLI crashes
 // possible without having to crawl the daemon host's log files.
 type stderrTail struct {
-	inner io.Writer
-	max   int
+	inner    io.Writer
+	maxBytes int
 
 	mu  sync.Mutex
 	buf []byte
 }
 
-func newStderrTail(inner io.Writer, max int) *stderrTail {
-	if max <= 0 {
-		max = agentStderrTailBytes
+func newStderrTail(inner io.Writer, maxBytes int) *stderrTail {
+	if maxBytes <= 0 {
+		maxBytes = agentStderrTailBytes
 	}
-	return &stderrTail{inner: inner, max: max}
+	return &stderrTail{inner: inner, maxBytes: maxBytes}
 }
 
 func (s *stderrTail) Write(p []byte) (int, error) {
@@ -44,8 +44,8 @@ func (s *stderrTail) Write(p []byte) (int, error) {
 	}
 	s.mu.Lock()
 	s.buf = append(s.buf, p...)
-	if len(s.buf) > s.max {
-		s.buf = s.buf[len(s.buf)-s.max:]
+	if len(s.buf) > s.maxBytes {
+		s.buf = s.buf[len(s.buf)-s.maxBytes:]
 	}
 	s.mu.Unlock()
 	return len(p), nil

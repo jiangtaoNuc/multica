@@ -1964,7 +1964,7 @@ func (h *Handler) QuickCreateIssue(w http.ResponseWriter, r *http.Request) {
 func writeAgentUnavailable(w http.ResponseWriter, reason string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnprocessableEntity)
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"code":   "agent_unavailable",
 		"reason": reason,
 	})
@@ -2354,8 +2354,7 @@ func (h *Handler) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 
 	// Track which fields were explicitly present in JSON (even if null)
 	var rawFields map[string]json.RawMessage
-	json.Unmarshal(bodyBytes, &rawFields)
-
+	_ = json.Unmarshal(bodyBytes, &rawFields)
 	// Pre-fill nullable fields (bare sqlc.narg) with current values
 	params := db.UpdateIssueParams{
 		ID:            prevIssue.ID,
@@ -2570,7 +2569,7 @@ func (h *Handler) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	// the two never drift (MUL-3375). Cancellation on reassignment is a
 	// separate side effect and always runs, independent of the run decision.
 	if assigneeChanged {
-		h.TaskService.CancelTasksForIssue(r.Context(), issue.ID)
+		_ = h.TaskService.CancelTasksForIssue(r.Context(), issue.ID)
 	}
 	if trigger, ok := h.IssueService.WillEnqueueRun(r.Context(),
 		service.IssueTriggerInput{
@@ -2588,7 +2587,7 @@ func (h *Handler) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	// This is distinct from agent-managed status transitions — cancellation
 	// is a user-initiated terminal action that should stop execution.
 	if statusChanged && issue.Status == "cancelled" {
-		h.TaskService.CancelTasksForIssue(r.Context(), issue.ID)
+		_ = h.TaskService.CancelTasksForIssue(r.Context(), issue.ID)
 	}
 
 	// Platform-driven parent notification: when this issue transitions into
@@ -2778,10 +2777,8 @@ func (h *Handler) DeleteIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.TaskService.CancelTasksForIssue(r.Context(), issue.ID)
-	// Fail any linked autopilot runs before delete (ON DELETE SET NULL clears issue_id).
-	h.Queries.FailAutopilotRunsByIssue(r.Context(), issue.ID)
-
+	_ = h.TaskService.CancelTasksForIssue(r.Context(), issue.ID) // Fail any linked autopilot runs before delete (ON DELETE SET NULL clears issue_id).
+	_ = h.Queries.FailAutopilotRunsByIssue(r.Context(), issue.ID)
 	// Collect all attachment URLs (issue-level + comment-level) before CASCADE delete.
 	attachmentURLs, _ := h.Queries.ListAttachmentURLsByIssueOrComments(r.Context(), issue.ID)
 
@@ -2840,10 +2837,10 @@ func (h *Handler) BatchUpdateIssues(w http.ResponseWriter, r *http.Request) {
 
 	// Detect which fields in "updates" were explicitly set (including null).
 	var rawTop map[string]json.RawMessage
-	json.Unmarshal(bodyBytes, &rawTop)
+	_ = json.Unmarshal(bodyBytes, &rawTop)
 	var rawUpdates map[string]json.RawMessage
 	if raw, exists := rawTop["updates"]; exists {
-		json.Unmarshal(raw, &rawUpdates)
+		_ = json.Unmarshal(raw, &rawUpdates)
 	}
 
 	// Short-circuit when no mutation field is present in `updates`. Without
@@ -3062,7 +3059,7 @@ func (h *Handler) BatchUpdateIssues(w http.ResponseWriter, r *http.Request) {
 		})
 
 		if assigneeChanged {
-			h.TaskService.CancelTasksForIssue(r.Context(), issue.ID)
+			_ = h.TaskService.CancelTasksForIssue(r.Context(), issue.ID)
 		}
 		// Same single predicate as UpdateIssue — batch must not grow its own
 		// copy of the enqueue rule (the historical source of four-entry-point
@@ -3081,7 +3078,7 @@ func (h *Handler) BatchUpdateIssues(w http.ResponseWriter, r *http.Request) {
 
 		// Cancel active tasks when the issue is cancelled by a user.
 		if statusChanged && issue.Status == "cancelled" {
-			h.TaskService.CancelTasksForIssue(r.Context(), issue.ID)
+			_ = h.TaskService.CancelTasksForIssue(r.Context(), issue.ID)
 		}
 
 		// Platform-driven parent notification, mirrored from UpdateIssue
@@ -3137,9 +3134,8 @@ func (h *Handler) BatchDeleteIssues(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		h.TaskService.CancelTasksForIssue(r.Context(), issue.ID)
-		h.Queries.FailAutopilotRunsByIssue(r.Context(), issue.ID)
-
+		_ = h.TaskService.CancelTasksForIssue(r.Context(), issue.ID)
+		_ = h.Queries.FailAutopilotRunsByIssue(r.Context(), issue.ID)
 		// Collect attachment URLs before CASCADE delete to clean up S3 objects.
 		attachmentURLs, _ := h.Queries.ListAttachmentURLsByIssueOrComments(r.Context(), issue.ID)
 

@@ -1126,7 +1126,7 @@ func runIssueUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(body) == 0 {
-		return fmt.Errorf("no fields to update; use flags like --title, --status, --priority, --assignee, etc.")
+		return fmt.Errorf("no fields to update; use flags like --title, --status, --priority, --assignee, etc")
 	}
 
 	var result map[string]any
@@ -1719,7 +1719,7 @@ func runIssueRerun(cmd *cobra.Command, args []string) error {
 		return cli.PrintJSON(os.Stdout, task)
 	}
 	agent := loadActorDisplayLookup(ctx, client).agent(strVal(task, "agent_id"))
-	fmt.Fprintf(os.Stdout, "Re-enqueued task %s on agent %s\n", strVal(task, "id"), agent)
+	_, _ = fmt.Fprintf(os.Stdout, "Re-enqueued task %s on agent %s\n", strVal(task, "id"), agent)
 	return nil
 }
 
@@ -1764,7 +1764,7 @@ func runIssueCancelTask(cmd *cobra.Command, args []string) error {
 	if status == "" {
 		status = "cancelled"
 	}
-	fmt.Fprintf(os.Stdout, "Task %s -> status=%s\n", taskRef.ID, status)
+	_, _ = fmt.Fprintf(os.Stdout, "Task %s -> status=%s\n", taskRef.ID, status)
 	return nil
 }
 
