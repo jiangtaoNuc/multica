@@ -7,6 +7,7 @@ import { SourceBackfillModal } from "../onboarding";
 import { AppSidebar } from "./app-sidebar";
 import { DashboardGuard } from "./dashboard-guard";
 import { NavigationProgress } from "./navigation-progress";
+import { RealtimeClock } from "./realtime-clock";
 import { WorkspacePresencePrefetch } from "./workspace-presence-prefetch";
 
 interface DashboardLayoutProps {
@@ -38,6 +39,7 @@ export function DashboardLayout({
         <AppSidebar searchSlot={searchSlot} />
         <SidebarInset className="relative overflow-hidden">
           <NavigationProgress />
+          <RealtimeClock />
           {children}
           <ModalRegistry />
           <SourceBackfillModal />

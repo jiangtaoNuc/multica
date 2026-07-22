@@ -1,0 +1,7 @@
+{
+  "type": "daemon:heartbeat_ack",
+  "payload": {
+    "runtime_id": "runtime-001",
+    "status": "ok"
+  }
+}

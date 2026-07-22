@@ -1,0 +1,8 @@
+{
+  "type": "daemon:heartbeat_ack",
+  "payload": {
+    "runtime_id": "runtime-001",
+    "status": "runtime_gone",
+    "runtime_gone": true
+  }
+}

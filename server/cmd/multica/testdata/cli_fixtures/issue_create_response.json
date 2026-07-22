@@ -1,0 +1,10 @@
+{
+  "id": "33333333-3333-3333-3333-333333333333",
+  "identifier": "MUL-125",
+  "title": "New feature request",
+  "status": "todo",
+  "priority": "none",
+  "description": "We need a dark mode toggle.",
+  "created_at": "2026-07-13T09:00:00Z",
+  "updated_at": "2026-07-13T09:00:00Z"
+}
