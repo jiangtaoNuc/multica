@@ -50,48 +50,68 @@ valid_lines = 0
 osv_severity_by_id = {}
 findings_by_id = {}
 
+
+def iter_json_objects(text):
+    # govulncheck -format json emits a stream of pretty-printed (multi-line)
+    # JSON objects concatenated together, not one object per line. Walk the
+    # stream with raw_decode so multi-line objects are decoded whole.
+    decoder = json.JSONDecoder()
+    idx = 0
+    length = len(text)
+    while idx < length:
+        while idx < length and text[idx].isspace():
+            idx += 1
+        if idx >= length:
+            break
+        try:
+            obj, end = decoder.raw_decode(text, idx)
+        except json.JSONDecodeError:
+            break
+        idx = end
+        yield obj
+
+
 try:
     with open(path, "r", encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                obj = json.loads(line)
-            except json.JSONDecodeError:
-                continue
+        content = fh.read()
 
-            valid_lines += 1
+    for obj in iter_json_objects(content):
+        # Skip any top-level value that is not a JSON object (e.g. a bare
+        # array element string), which is not a govulncheck event.
+        if not isinstance(obj, dict):
+            continue
 
-            finding = obj.get("finding")
-            if finding:
-                osv_id = finding.get("osv")
+        valid_lines += 1
+
+        finding = obj.get("finding")
+        if finding:
+            osv_id = finding.get("osv")
+            if osv_id:
+                findings_by_id.setdefault(osv_id, []).append(finding.get("severity"))
+            else:
+                counts["vulnerabilities"] += 1
+                sev = finding.get("severity")
+                if sev in counts:
+                    counts[sev] += 1
+            continue
+
+        osv = obj.get("osv")
+        if osv:
+            osv_id = osv.get("id")
+            if not osv_id or osv_id not in osv_severity_by_id:
+                max_score = None
+                for entry in osv.get("severity", []):
+                    score = entry.get("score")
+                    if score is None:
+                        continue
+                    try:
+                        score = float(score)
+                    except (TypeError, ValueError):
+                        continue
+                    if max_score is None or score > max_score:
+                        max_score = score
                 if osv_id:
-                    findings_by_id.setdefault(osv_id, []).append(finding.get("severity"))
-                else:
-                    counts["vulnerabilities"] += 1
-                    sev = finding.get("severity")
-                    if sev in counts:
-                        counts[sev] += 1
-                continue
-
-            osv = obj.get("osv")
-            if osv:
-                osv_id = osv.get("id")
-                if not osv_id or osv_id not in osv_severity_by_id:
-                    max_score = None
-                    for entry in osv.get("severity", []):
-                        score = entry.get("score")
-                        if score is None:
-                            continue
-                        try:
-                            score = float(score)
-                        except (TypeError, ValueError):
-                            continue
-                        if max_score is None or score > max_score:
-                            max_score = score
-                    if osv_id:
-                        osv_severity_by_id[osv_id] = max_score
+                    osv_severity_by_id[osv_id] = max_score
 except FileNotFoundError:
     pass
 

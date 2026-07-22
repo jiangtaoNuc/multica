@@ -1,0 +1,11 @@
+{
+  "type": "task:message",
+  "payload": {
+    "task_id": "task-001",
+    "issue_id": "issue-001",
+    "seq": 7,
+    "type": "text",
+    "content": "I will start by reading the issue description.",
+    "created_at": "2026-07-13T08:30:00Z"
+  }
+}
