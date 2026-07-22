@@ -536,3 +536,13 @@ export function issueAttachmentsOptions(issueId: string) {
     queryFn: () => api.listAttachments(issueId),
   });
 }
+
+// Re-export contract types from the OpenAPI-generated spec so frontend
+// modules can reference the wire-format source of truth. The drift gate
+// (pnpm run generate:api && git diff --exit-code) keeps these in sync
+// with server/api/openapi.yaml.
+export type {
+  IssueResponse as ContractIssueResponse,
+  CreateIssueRequest as ContractCreateIssueRequest,
+  UpdateIssueRequest as ContractUpdateIssueRequest,
+} from "../api/contract";

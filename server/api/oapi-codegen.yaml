@@ -1,0 +1,10 @@
+# oapi-codegen configuration
+# Generates Go types from openapi.yaml (spec-first / single source of truth).
+# Usage: go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen --config oapi-codegen.yaml openapi.yaml
+package: openapitypes
+generate:
+  models: true
+  chi-server: false
+  client: false
+  embedded-spec: false
+output: openapi_types.gen.go
