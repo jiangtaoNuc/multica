@@ -1,4 +1,11 @@
-.PHONY: help makehelp dev server daemon cli multica build lint test migrate-up migrate-down sqlc sqlc-check migrate-check seed clean setup start stop check worktree-env setup-main start-main stop-main check-main setup-worktree start-worktree stop-worktree check-worktree db-up db-down db-reset selfhost selfhost-build selfhost-stop openapi-lint generate-api openapi-drift
+.PHONY: help makehelp dev server daemon cli multica build lint test migrate-up migrate-down sqlc sqlc-check migrate-check seed clean setup start stop check worktree-env setup-main start-main stop-main check-main setup-worktree start-worktree stop-worktree check-worktree db-up db-down db-reset selfhost selfhost-build selfhost-stop openapi-lint generate-api openapi-drift vuln tidy-check
+
+# Some containers/installs keep the Go toolchain outside the default PATH.
+ifeq ($(shell command -v go 2>/dev/null),)
+  ifneq ($(wildcard /usr/local/go/bin/go),)
+    export PATH := /usr/local/go/bin:$(PATH)
+  endif
+endif
 
 MAIN_ENV_FILE ?= .env
 WORKTREE_ENV_FILE ?= .env.worktree
@@ -200,7 +207,7 @@ stop: ## Stop backend and frontend processes for the current checkout
 			echo "✓ App processes stopped. Remote PostgreSQL was not affected." ;; \
 	esac
 
-check: ## Run typecheck, TS tests, Go tests, and Playwright E2E for the current checkout
+check: tidy-check vuln ## Run typecheck, TS tests, Go tests, and Playwright E2E for the current checkout
 	$(REQUIRE_ENV)
 	@ENV_FILE="$(ENV_FILE)" bash scripts/check.sh
 
@@ -300,6 +307,13 @@ test: ## Run Go tests after ensuring the target DB exists and migrations are app
 	@bash scripts/ensure-postgres.sh "$(ENV_FILE)"
 	cd server && go run ./cmd/migrate up
 	cd server && go test -race ./...
+
+vuln: ## Run govulncheck against the Go backend; fails on HIGH/CRITICAL severity
+	@bash scripts/govulncheck.sh
+
+tidy-check: ## Verify server/go.mod and server/go.sum have no drift from go mod tidy
+	@cd server && go mod tidy
+	@git diff --exit-code -- server/go.mod server/go.sum
 
 # Database
 ##@ Database
