@@ -5,5 +5,16 @@ export default defineConfig({
     globals: true,
     include: ["**/*.test.{ts,tsx}"],
     passWithNoTests: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "lcov"],
+      reportsDirectory: "./coverage",
+      thresholds: {
+        lines: 70,
+        functions: 70,
+        branches: 70,
+        statements: 70,
+      },
+    },
   },
 });

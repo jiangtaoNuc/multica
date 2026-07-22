@@ -30,6 +30,7 @@
     "package:all": "node scripts/package.mjs --all-platforms --publish never",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
@@ -69,6 +70,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^5.1.1",
+    "@vitest/coverage-v8": "catalog:",
     "electron": "^39.2.6",
     "electron-builder": "^26.0.12",
     "electron-vite": "^5.0.0",
