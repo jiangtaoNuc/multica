@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Inter, Geist_Mono, Source_Serif_4 } from "next/font/google";
+import { Inter, Geist_Mono, Source_Serif_4, Press_Start_2P, VT323 } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@multica/ui/components/ui/sonner";
 import { cn } from "@multica/ui/lib/utils";
@@ -49,6 +49,21 @@ const sourceSerif = Source_Serif_4({
     "Times New Roman",
     "serif",
   ],
+});
+// Pixel-art display fonts for the Pixel (像素风) page — migrated from CODING
+// HARNESS. Scoped to the pixel page via CSS vars consumed in
+// packages/views/pixel/styles/pixel.css; the files only download when referenced.
+const pressStart2P = Press_Start_2P({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-pixel-heading",
+  fallback: ["ui-monospace", "SFMono-Regular", "monospace"],
+});
+const vt323 = VT323({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-pixel-body",
+  fallback: ["ui-monospace", "SFMono-Regular", "monospace"],
 });
 
 export const viewport: Viewport = {
@@ -114,7 +129,7 @@ export default async function RootLayout({
     <html
       lang={HTML_LANG[locale]}
       suppressHydrationWarning
-      className={cn("antialiased font-sans h-full", inter.variable, geistMono.variable, sourceSerif.variable)}
+      className={cn("antialiased font-sans h-full", inter.variable, geistMono.variable, sourceSerif.variable, pressStart2P.variable, vt323.variable)}
     >
       <body className="h-full overflow-hidden">
         {/*

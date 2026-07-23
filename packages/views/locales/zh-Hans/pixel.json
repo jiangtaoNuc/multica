@@ -1,0 +1,21 @@
+{
+  "banner_message": "像素风 Issue 生命周期可视化 — 切换标签查看各 FSM 状态",
+  "select_issue": "选择 Issue 以查看流水线",
+  "no_issues": "暂无 Issue，等待创建...",
+  "sidebar": {
+    "current_state": "当前状态",
+    "title": "标题",
+    "assignee": "负责人",
+    "pull_request": "拉取请求",
+    "deploy": "部署",
+    "last_comment": "最新评论",
+    "pr_draft": "[草稿]",
+    "pr_merged": "[已合并]",
+    "pr_closed": "[已关闭]",
+    "ci_pass": "CI: ✓",
+    "ci_fail": "CI: ✗",
+    "ci_pending": "CI: ...",
+    "deploy_failed": "✗ 部署失败",
+    "degraded": "⚠ 降级模式"
+  }
+}

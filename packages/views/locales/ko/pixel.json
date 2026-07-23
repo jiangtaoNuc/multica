@@ -1,0 +1,21 @@
+{
+  "banner_message": "픽셀 아트 이슈 수명 주기 시각화 — 탭을 전환하여 각 FSM 상태 확인",
+  "select_issue": "이슈를 선택하여 파이프라인 보기",
+  "no_issues": "이슈가 없습니다. 생성을 기다리는 중...",
+  "sidebar": {
+    "current_state": "현재 상태",
+    "title": "제목",
+    "assignee": "담당자",
+    "pull_request": "풀 리퀘스트",
+    "deploy": "배포",
+    "last_comment": "최근 댓글",
+    "pr_draft": "[초안]",
+    "pr_merged": "[병합됨]",
+    "pr_closed": "[닫힘]",
+    "ci_pass": "CI: ✓",
+    "ci_fail": "CI: ✗",
+    "ci_pending": "CI: ...",
+    "deploy_failed": "✗ 배포 실패",
+    "degraded": "⚠ 성능 저하 모드"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "banner_message": "Pixel-art issue lifecycle visualization — switch tabs to see each FSM state",
+  "select_issue": "Select an issue to view its pipeline",
+  "no_issues": "No issues found. Waiting for creation...",
+  "sidebar": {
+    "current_state": "CURRENT STATE",
+    "title": "TITLE",
+    "assignee": "ASSIGNEE",
+    "pull_request": "PULL REQUEST",
+    "deploy": "DEPLOY",
+    "last_comment": "LAST COMMENT",
+    "pr_draft": "[DRAFT]",
+    "pr_merged": "[MERGED]",
+    "pr_closed": "[CLOSED]",
+    "ci_pass": "CI: ✓",
+    "ci_fail": "CI: ✗",
+    "ci_pending": "CI: ...",
+    "deploy_failed": "✗ DEPLOY FAILED",
+    "degraded": "⚠ DEGRADED MODE"
+  }
+}
