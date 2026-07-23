@@ -214,3 +214,15 @@ func TestRedactMultipleSecrets(t *testing.T) {
 		t.Fatal("GitHub token not redacted in multi-secret text")
 	}
 }
+
+func TestStripNulBytes(t *testing.T) {
+	t.Parallel()
+	input := "before\x00after\x00"
+	got := Text(input)
+	if strings.ContainsRune(got, 0) {
+		t.Fatalf("NUL byte not stripped: %q", got)
+	}
+	if got != "beforeafter" {
+		t.Fatalf("expected surrounding content preserved, got: %q", got)
+	}
+}

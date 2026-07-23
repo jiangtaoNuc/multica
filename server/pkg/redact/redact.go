@@ -83,6 +83,13 @@ func init() {
 // matches with safe placeholders. It also masks the local user's home
 // directory path to prevent leaking the username.
 func Text(s string) string {
+	// Postgres text/jsonb columns reject NUL bytes (SQLSTATE 22021), which
+	// would otherwise turn any agent output containing 0x00 into a failed
+	// insert and a 500. Strip them before anything else touches the string.
+	if strings.IndexByte(s, 0) >= 0 {
+		s = strings.ReplaceAll(s, "\x00", "")
+	}
+
 	for _, p := range patterns {
 		s = p.re.ReplaceAllString(s, p.replacement)
 	}
