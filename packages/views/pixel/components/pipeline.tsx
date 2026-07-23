@@ -38,11 +38,10 @@ function NodeCard({ state, currentIndex, stateIndex, stayedMs, isFailed }: NodeC
   const isCurrent = stateIndex === currentIndex;
 
   useEffect(() => {
-    if (isCurrent) {
-      setShowLightUp(true);
-      const t = setTimeout(() => setShowLightUp(false), 1000);
-      return () => clearTimeout(t);
-    }
+    if (!isCurrent) return;
+    setShowLightUp(true);
+    const t = setTimeout(() => setShowLightUp(false), 1000);
+    return () => clearTimeout(t);
   }, [isCurrent]);
 
   const bg = isCompleted

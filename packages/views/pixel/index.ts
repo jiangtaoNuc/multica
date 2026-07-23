@@ -1,1 +1,1 @@
-export { PixelPage } from "./pixel-page";
+export { PixelPage } from "./components/pixel-page";
