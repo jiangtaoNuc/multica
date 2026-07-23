@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@multica/core/api";
+import layoutEn from "../locales/en/layout.json";
 import { AppSidebar } from "./app-sidebar";
 
 const { detail, deletePin, navigation, pins } = vi.hoisted(() => ({
@@ -79,6 +80,11 @@ vi.mock("@multica/ui/components/ui/tooltip", () => ({
   TooltipContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   TooltipTrigger: ({ children }: { children: React.ReactNode }) => <button type="button">{children}</button>,
 }));
+// react-i18next isn't initialised in views tests; resolve the selector against
+// the real en/layout.json so returned values are primitive strings.
+vi.mock("../i18n", () => ({
+  useT: () => ({ t: (sel: (r: typeof layoutEn) => string) => sel(layoutEn) }),
+}));
 vi.mock("./help-launcher", () => ({ HelpLauncher: () => null }));
 vi.mock("../auth", () => ({ useLogout: () => vi.fn() }));
 vi.mock("../issues/components/status-icon", () => ({ StatusIcon: () => <span /> }));
@@ -110,6 +116,7 @@ vi.mock("@multica/core/paths", () => ({
     settings: () => "/acme/settings",
     issueDetail: (id: string) => `/acme/issues/${id}`,
     projectDetail: (id: string) => `/acme/projects/${id}`,
+    pixel: () => "/acme/pixel",
   }),
 }));
 vi.mock("@multica/core/api", async (importOriginal) => {
