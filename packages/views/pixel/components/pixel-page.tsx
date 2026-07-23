@@ -22,7 +22,7 @@ export function PixelPage() {
       <PageHeader>
         <h1 className="text-lg font-semibold">{tLayout(($) => $.nav.pixel)}</h1>
       </PageHeader>
-      <div className="pixel-root flex-1 min-h-0 flex flex-col overflow-hidden">
+      <div className="pixel-root flex-1 min-h-0 flex flex-col overflow-hidden bg-white">
         <header
           style={{
             padding: "16px 24px",
@@ -66,7 +66,7 @@ export function PixelPage() {
                 style={{
                   fontFamily: "var(--font-body)",
                   fontSize: 24,
-                  color: "var(--text-dust)",
+                  color: "#374151",
                   textAlign: "center",
                 }}
               >
