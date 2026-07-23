@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@multica/core/api";
+import layoutEn from "../locales/en/layout.json";
 import { AppSidebar } from "./app-sidebar";
 
 const { detail, deletePin, navigation, pins } = vi.hoisted(() => ({
@@ -79,19 +80,11 @@ vi.mock("@multica/ui/components/ui/tooltip", () => ({
   TooltipContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   TooltipTrigger: ({ children }: { children: React.ReactNode }) => <button type="button">{children}</button>,
 }));
-// react-i18next isn't initialised in views tests; use a recursive Proxy so any
-// nested selector (e.g. $ => $.sidebar.workspaces_label) returns "" safely.
-vi.mock("../i18n", () => {
-  function p(): Record<string, unknown> {
-    return new Proxy({} as Record<string, unknown>, {
-      get(_t, key) {
-        if (key === Symbol.toPrimitive || key === "toString" || key === "valueOf") return () => "";
-        return p();
-      },
-    });
-  }
-  return { useT: () => ({ t: (sel: (r: Record<string, unknown>) => string) => { try { return sel(p()) ?? ""; } catch { return ""; } } }) };
-});
+// react-i18next isn't initialised in views tests; resolve the selector against
+// the real en/layout.json so returned values are primitive strings.
+vi.mock("../i18n", () => ({
+  useT: () => ({ t: (sel: (r: typeof layoutEn) => string) => sel(layoutEn) }),
+}));
 vi.mock("./help-launcher", () => ({ HelpLauncher: () => null }));
 vi.mock("../auth", () => ({ useLogout: () => vi.fn() }));
 vi.mock("../issues/components/status-icon", () => ({ StatusIcon: () => <span /> }));
