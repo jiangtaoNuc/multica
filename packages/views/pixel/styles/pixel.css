@@ -1,0 +1,147 @@
+/*
+ * Pixel-art design system — migrated from CODING HARNESS
+ * (coding-harness-viz/apps/web/src/styles/global.css).
+ *
+ * Variables are scoped to `.pixel-root` so the pixel palette never leaks into
+ * Multica's own design tokens (`:root`). Keyframes are namespaced with a
+ * `pixel-` prefix to avoid collisions with Tailwind / shadcn animations.
+ * `--font-pixel-heading` / `--font-pixel-body` are the next/font families
+ * registered in apps/web/app/layout.tsx (Press Start 2P / VT323).
+ */
+.pixel-root {
+  --bg-deep: #1a1c2c;
+  --ink-muted: #41546b;
+  --accent-cyan: #41a6f6;
+  --accent-lime: #a7f070;
+  --accent-red: #e43b44;
+  --text-bone: #f4f4f4;
+  --text-dust: #c0cbdc;
+  --font-heading: var(--font-pixel-heading), "Press Start 2P", ui-monospace,
+    monospace;
+  --font-body: var(--font-pixel-body), "VT323", ui-monospace, monospace;
+  --node-size: 64px;
+  --pipe-height: 8px;
+
+  background: var(--bg-deep);
+  color: var(--text-bone);
+  font-family: var(--font-body);
+  font-size: 20px;
+}
+
+@keyframes pixel-heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.12);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  75% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes pixel-data-flow {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 16px 0;
+  }
+}
+
+@keyframes pixel-node-light-up {
+  0% {
+    opacity: 0.2;
+    box-shadow: 0 0 0 var(--accent-cyan);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 20px var(--accent-cyan);
+  }
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 8px var(--accent-cyan);
+  }
+}
+
+@keyframes pixel-firework {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5) rotate(180deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes pixel-rocket-launch {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(-30px) translateX(40px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50px) translateX(80px);
+    opacity: 0;
+  }
+}
+
+@keyframes pixel-fail-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes pixel-banner-slide {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-root .anim-heartbeat {
+    animation: none !important;
+  }
+  .pixel-root .anim-dataflow {
+    animation: none !important;
+  }
+  .pixel-root .anim-firework {
+    animation: none !important;
+    display: none !important;
+  }
+  .pixel-root .anim-rocket {
+    animation: none !important;
+    display: none !important;
+  }
+  .pixel-root .anim-shake {
+    animation: none !important;
+  }
+}
