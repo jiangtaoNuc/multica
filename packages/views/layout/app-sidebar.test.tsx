@@ -79,7 +79,19 @@ vi.mock("@multica/ui/components/ui/tooltip", () => ({
   TooltipContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   TooltipTrigger: ({ children }: { children: React.ReactNode }) => <button type="button">{children}</button>,
 }));
-vi.mock("../i18n", () => ({ useT: () => ({ t: (sel: (r: Record<string, unknown>) => unknown) => sel({}) ?? "" }) }));
+// react-i18next isn't initialised in views tests; use a recursive Proxy so any
+// nested selector (e.g. $ => $.sidebar.workspaces_label) returns "" safely.
+vi.mock("../i18n", () => {
+  function p(): Record<string, unknown> {
+    return new Proxy({} as Record<string, unknown>, {
+      get(_t, key) {
+        if (key === Symbol.toPrimitive || key === "toString" || key === "valueOf") return () => "";
+        return p();
+      },
+    });
+  }
+  return { useT: () => ({ t: (sel: (r: Record<string, unknown>) => string) => { try { return sel(p()) ?? ""; } catch { return ""; } } }) };
+});
 vi.mock("./help-launcher", () => ({ HelpLauncher: () => null }));
 vi.mock("../auth", () => ({ useLogout: () => vi.fn() }));
 vi.mock("../issues/components/status-icon", () => ({ StatusIcon: () => <span /> }));
