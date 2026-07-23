@@ -20,12 +20,14 @@ const DEMO_ISSUES: IssueSummary[] = DEMO_SNAPSHOTS.map((s) => ({
  * state changes, a {from, to} transition is emitted for 3s — driving the
  * firework (S5) and rocket (S6) animations.
  */
+const FIRST_SNAPSHOT = DEMO_SNAPSHOTS[0]!;
+
 export function usePixelDemo() {
-  const [selectedId, setSelectedId] = useState<string>(DEMO_SNAPSHOTS[0].issueId);
+  const [selectedId, setSelectedId] = useState<string>(FIRST_SNAPSHOT.issueId);
   const [transition, setTransition] = useState<{ from: string; to: string } | null>(null);
 
   const snapshot: HarnessSnapshot =
-    DEMO_SNAPSHOTS.find((s) => s.issueId === selectedId) ?? DEMO_SNAPSHOTS[0];
+    DEMO_SNAPSHOTS.find((s) => s.issueId === selectedId) ?? FIRST_SNAPSHOT;
 
   const handleSelect = useCallback(
     (id: string) => {

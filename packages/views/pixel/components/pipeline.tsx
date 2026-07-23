@@ -9,6 +9,11 @@ import {
   type HarnessState,
 } from "./types";
 
+const GLYPH_CHECK = "✓";
+const GLYPH_DOT = "●";
+const GLYPH_FIREWORK = "✦ ✧ ✦";
+const GLYPH_ROCKET = "🚀";
+
 function formatDuration(ms: number): string {
   if (ms <= 0) return "--";
   const s = Math.floor(ms / 1000);
@@ -31,7 +36,6 @@ function NodeCard({ state, currentIndex, stateIndex, stayedMs, isFailed }: NodeC
   const [showLightUp, setShowLightUp] = useState(false);
   const isCompleted = stateIndex < currentIndex;
   const isCurrent = stateIndex === currentIndex;
-  const isPending = stateIndex > currentIndex;
 
   useEffect(() => {
     if (isCurrent) {
@@ -95,8 +99,8 @@ function NodeCard({ state, currentIndex, stateIndex, stayedMs, isFailed }: NodeC
       >
         {STATE_SHORT[state]}
       </span>
-      {isCompleted && <span style={{ fontSize: 16, color: "var(--bg-deep)" }}>✓</span>}
-      {isCurrent && <span style={{ fontSize: 12, color: "var(--bg-deep)" }}>●</span>}
+      {isCompleted && <span aria-hidden="true" style={{ fontSize: 16, color: "var(--bg-deep)" }}>{GLYPH_CHECK}</span>}
+      {isCurrent && <span aria-hidden="true" style={{ fontSize: 12, color: "var(--bg-deep)" }}>{GLYPH_DOT}</span>}
       <span
         style={{
           fontFamily: "var(--font-body)",
@@ -194,6 +198,7 @@ export function Pipeline({ snapshot, transition }: Props) {
 
       {transition?.to === "pr_merged" && (
         <div
+          aria-hidden="true"
           className="anim-firework"
           style={{
             position: "absolute",
@@ -204,12 +209,13 @@ export function Pipeline({ snapshot, transition }: Props) {
             pointerEvents: "none",
           }}
         >
-          ✦ ✧ ✦
+          {GLYPH_FIREWORK}
         </div>
       )}
 
       {transition?.to === "deployed" && (
         <div
+          aria-hidden="true"
           className="anim-rocket"
           style={{
             position: "absolute",
@@ -220,7 +226,7 @@ export function Pipeline({ snapshot, transition }: Props) {
             pointerEvents: "none",
           }}
         >
-          🚀
+          {GLYPH_ROCKET}
         </div>
       )}
     </div>

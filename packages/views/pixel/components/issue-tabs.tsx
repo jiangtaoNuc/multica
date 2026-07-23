@@ -1,6 +1,11 @@
 "use client";
 
+import { useT } from "../../i18n";
 import type { IssueSummary } from "./types";
+
+const SHADE_GLYPH = "▒▒▒";
+const BRACKET_OPEN = "[";
+const BRACKET_CLOSE = "]";
 
 interface Props {
   issues: IssueSummary[];
@@ -9,6 +14,8 @@ interface Props {
 }
 
 export function IssueTabs({ issues, selectedId, onSelect }: Props) {
+  const { t } = useT("pixel");
+
   if (issues.length === 0) {
     return (
       <div
@@ -20,7 +27,11 @@ export function IssueTabs({ issues, selectedId, onSelect }: Props) {
           textAlign: "center",
         }}
       >
-        ▒▒▒ No issues found. Waiting for creation... ▒▒▒
+        <span aria-hidden="true">{SHADE_GLYPH}</span>
+        {" "}
+        {t(($) => $.no_issues)}
+        {" "}
+        <span aria-hidden="true">{SHADE_GLYPH}</span>
       </div>
     );
   }
@@ -55,7 +66,7 @@ export function IssueTabs({ issues, selectedId, onSelect }: Props) {
               transition: "none",
             }}
           >
-            [{issue.identifier}]
+            {BRACKET_OPEN}{issue.identifier}{BRACKET_CLOSE}
           </button>
         );
       })}

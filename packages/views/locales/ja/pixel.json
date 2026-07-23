@@ -1,0 +1,21 @@
+{
+  "banner_message": "ピクセルアート・イシューライフサイクルビジュアライザー — タブを切り替えてFSM状態を確認",
+  "select_issue": "イシューを選択してパイプラインを表示",
+  "no_issues": "イシューが見つかりません。作成をお待ちください...",
+  "sidebar": {
+    "current_state": "現在の状態",
+    "title": "タイトル",
+    "assignee": "担当者",
+    "pull_request": "プルリクエスト",
+    "deploy": "デプロイ",
+    "last_comment": "最新コメント",
+    "pr_draft": "[ドラフト]",
+    "pr_merged": "[マージ済み]",
+    "pr_closed": "[クローズ]",
+    "ci_pass": "CI: ✓",
+    "ci_fail": "CI: ✗",
+    "ci_pending": "CI: ...",
+    "deploy_failed": "✗ デプロイ失敗",
+    "degraded": "⚠ 縮退モード"
+  }
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "../../i18n";
 import { STATE_LABELS, type HarnessSnapshot } from "./types";
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
 
 export function PixelSidebar({ snapshot }: Props) {
   const { meta, state } = snapshot;
+  const { t } = useT("pixel");
 
   return (
     <div
@@ -33,7 +35,7 @@ export function PixelSidebar({ snapshot }: Props) {
             marginBottom: 4,
           }}
         >
-          CURRENT STATE
+          {t(($) => $.sidebar.current_state)}
         </div>
         <div
           style={{
@@ -58,7 +60,7 @@ export function PixelSidebar({ snapshot }: Props) {
             marginBottom: 4,
           }}
         >
-          TITLE
+          {t(($) => $.sidebar.title)}
         </div>
         <div style={{ fontSize: 18, color: "var(--text-bone)", wordBreak: "break-word" }}>
           {snapshot.title}
@@ -75,7 +77,7 @@ export function PixelSidebar({ snapshot }: Props) {
               marginBottom: 4,
             }}
           >
-            ASSIGNEE
+            {t(($) => $.sidebar.assignee)}
           </div>
           <div style={{ color: "var(--accent-cyan)" }}>{meta.assignee}</div>
         </div>
@@ -91,7 +93,7 @@ export function PixelSidebar({ snapshot }: Props) {
               marginBottom: 4,
             }}
           >
-            PULL REQUEST
+            {t(($) => $.sidebar.pull_request)}
           </div>
           <a
             href={meta.prUrl}
@@ -110,14 +112,14 @@ export function PixelSidebar({ snapshot }: Props) {
             {meta.prUrl.replace("https://github.com/", "")}
           </a>
           <div style={{ marginTop: 4, fontSize: 16, color: "var(--text-dust)" }}>
-            {meta.prDraft && <span style={{ color: "var(--accent-red)" }}> [DRAFT]</span>}
-            {meta.prMerged && <span style={{ color: "var(--accent-lime)" }}> [MERGED]</span>}
+            {meta.prDraft && <span style={{ color: "var(--accent-red)" }}>{t(($) => $.sidebar.pr_draft)}</span>}
+            {meta.prMerged && <span style={{ color: "var(--accent-lime)" }}>{t(($) => $.sidebar.pr_merged)}</span>}
             {meta.prClosed && !meta.prMerged && (
-              <span style={{ color: "var(--accent-red)" }}> [CLOSED]</span>
+              <span style={{ color: "var(--accent-red)" }}>{t(($) => $.sidebar.pr_closed)}</span>
             )}
-            {meta.ciStatus === "pass" && <span> CI: ✓</span>}
-            {meta.ciStatus === "fail" && <span style={{ color: "var(--accent-red)" }}> CI: ✗</span>}
-            {meta.ciStatus === "pending" && <span> CI: ...</span>}
+            {meta.ciStatus === "pass" && <span>{t(($) => $.sidebar.ci_pass)}</span>}
+            {meta.ciStatus === "fail" && <span style={{ color: "var(--accent-red)" }}>{t(($) => $.sidebar.ci_fail)}</span>}
+            {meta.ciStatus === "pending" && <span>{t(($) => $.sidebar.ci_pending)}</span>}
           </div>
         </div>
       )}
@@ -132,7 +134,7 @@ export function PixelSidebar({ snapshot }: Props) {
               marginBottom: 4,
             }}
           >
-            DEPLOY
+            {t(($) => $.sidebar.deploy)}
           </div>
           <a
             href={meta.deployUrl}
@@ -148,7 +150,7 @@ export function PixelSidebar({ snapshot }: Props) {
           </a>
           {snapshot.meta.deployFailed && (
             <div style={{ color: "var(--accent-red)", fontSize: 16, marginTop: 4 }}>
-              ✗ DEPLOY FAILED
+              {t(($) => $.sidebar.deploy_failed)}
             </div>
           )}
         </div>
@@ -164,7 +166,7 @@ export function PixelSidebar({ snapshot }: Props) {
               marginBottom: 4,
             }}
           >
-            LAST COMMENT
+            {t(($) => $.sidebar.last_comment)}
           </div>
           <div
             style={{
@@ -192,7 +194,7 @@ export function PixelSidebar({ snapshot }: Props) {
             textAlign: "center",
           }}
         >
-          ⚠ DEGRADED MODE
+          {t(($) => $.sidebar.degraded)}
         </div>
       )}
     </div>
