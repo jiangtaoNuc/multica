@@ -62,8 +62,8 @@ catalog:
   yaml: "^2.6.0"
 
   # Testing
-  vitest: "^4.1.0"
-  "@vitest/coverage-v8": "^4.1.0"
+  vitest: "4.1.10"
+  "@vitest/coverage-v8": "4.1.10"
   jsdom: "^29.0.1"
   "@vitejs/plugin-react": "^6.0.1"
   "@testing-library/react": "^16.3.2"
