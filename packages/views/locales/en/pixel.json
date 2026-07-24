@@ -2,6 +2,7 @@
   "banner_message": "Pixel-art issue lifecycle visualization — switch tabs to see each FSM state",
   "select_issue": "Select an issue to view its pipeline",
   "no_issues": "No issues found. Waiting for creation...",
+  "status_all": "ALL",
   "sidebar": {
     "current_state": "CURRENT STATE",
     "title": "TITLE",
