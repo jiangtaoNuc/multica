@@ -2,6 +2,7 @@
   "banner_message": "像素风 Issue 生命周期可视化 — 切换标签查看各 FSM 状态",
   "select_issue": "选择 Issue 以查看流水线",
   "no_issues": "暂无 Issue，等待创建...",
+  "status_all": "全部",
   "sidebar": {
     "current_state": "当前状态",
     "title": "标题",
