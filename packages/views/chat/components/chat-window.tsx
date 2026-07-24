@@ -158,7 +158,7 @@ function replaceOptimisticChatMessageId(
   );
 }
 
-export function ChatWindow() {
+export function ChatWindow({ variant = "floating" }: { variant?: "floating" | "page" } = {}) {
   const { t } = useT("chat");
   const wsId = useWorkspaceId();
   const isOpen = useChatStore((s) => s.isOpen);
@@ -657,37 +657,25 @@ export function ChatWindow() {
   // a real message, or a pending task whose timeline will stream in.
   const hasMessages = messages.length > 0 || !!pendingTaskId;
 
-  const isVisible = isOpen && (isExpanded || boundsReady);
+  const isPage = variant === "page";
+  const isVisible = isPage || (isOpen && (isExpanded || boundsReady));
 
-  const containerClass = "absolute bottom-2 right-2 z-50 flex flex-col rounded-xl ring-1 ring-foreground/10 bg-sidebar shadow-2xl overflow-hidden";
-  const containerStyle: React.CSSProperties = {
-    transformOrigin: "bottom right",
-    pointerEvents: isOpen ? "auto" : "none",
-  };
+  const containerClass = isPage
+    ? "relative flex flex-1 min-h-0 flex-col bg-background overflow-hidden"
+    : "absolute bottom-2 right-2 z-50 flex flex-col rounded-xl ring-1 ring-foreground/10 bg-sidebar shadow-2xl overflow-hidden";
+  const containerStyle: React.CSSProperties = isPage
+    ? {}
+    : {
+      transformOrigin: "bottom right",
+      pointerEvents: isOpen ? "auto" : "none",
+    };
 
   const contextItems = useChatContextItems(wsId);
 
-  return (
-    <motion.div
-      ref={windowRef}
-      className={containerClass}
-      style={containerStyle}
-      initial={{ opacity: 0, scale: 0.95, width: renderWidth, height: renderHeight }}
-      animate={{
-        opacity: isVisible ? 1 : 0,
-        scale: isVisible ? 1 : 0.95,
-        width: renderWidth,
-        height: renderHeight,
-      }}
-      transition={{
-        width: isDragging ? { duration: 0 } : { type: "spring", duration: 0.3, bounce: 0 },
-        height: isDragging ? { duration: 0 } : { type: "spring", duration: 0.3, bounce: 0 },
-        opacity: { duration: 0.15 },
-        scale: { type: "spring", duration: 0.2, bounce: 0 },
-      }}
-    >
-      <ChatResizeHandles onDragStart={startDrag} />
-      {/* Header — ⊕ new + session dropdown | window tools */}
+  const chatContent = (
+    <>
+      {!isPage && <ChatResizeHandles onDragStart={startDrag} />}
+      {/* Header — new + session dropdown | window tools */}
       <div className="flex items-center justify-between border-b px-4 py-2.5 gap-2">
         <div className="flex items-center gap-1 min-w-0">
           <Tooltip>
@@ -707,50 +695,49 @@ export function ChatWindow() {
           </Tooltip>
           <SessionDropdown
             sessions={sessions}
-            // Use the full agent list (incl. archived) so historical
-            // sessions can still resolve their avatar.
             agents={agents}
             activeSessionId={activeSessionId}
             onSelectSession={handleSelectSession}
           />
         </div>
-        <div className="flex items-center gap-0.5 shrink-0">
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="text-muted-foreground"
-                  onClick={toggleExpand}
-                />
-              }
-            >
-              {isExpanded || isAtMax ? <Minimize2 /> : <Maximize2 />}
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              {isExpanded || isAtMax ? t(($) => $.window.restore_tooltip) : t(($) => $.window.expand_tooltip)}
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="text-muted-foreground"
-                  onClick={handleMinimize}
-                />
-              }
-            >
-              <Minus />
-            </TooltipTrigger>
-            <TooltipContent side="top">{t(($) => $.window.minimize_tooltip)}</TooltipContent>
-          </Tooltip>
-        </div>
+        {!isPage && (
+          <div className="flex items-center gap-0.5 shrink-0">
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-muted-foreground"
+                    onClick={toggleExpand}
+                  />
+                }
+              >
+                {isExpanded || isAtMax ? <Minimize2 /> : <Maximize2 />}
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {isExpanded || isAtMax ? t(($) => $.window.restore_tooltip) : t(($) => $.window.expand_tooltip)}
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-muted-foreground"
+                    onClick={handleMinimize}
+                  />
+                }
+              >
+                <Minus />
+              </TooltipTrigger>
+              <TooltipContent side="top">{t(($) => $.window.minimize_tooltip)}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
       </div>
 
-      {/* Messages / skeleton / empty state */}
       {showSkeleton ? (
         <ChatMessageSkeleton />
       ) : hasMessages ? (
@@ -772,23 +759,12 @@ export function ChatWindow() {
         />
       )}
 
-      {/* Status banner above the input — single mutually-exclusive slot.
-       *  Priority: no-agent > offline / unstable. Agent presence is the
-       *  hard prerequisite (you can't send anything without one), so it
-       *  always wins over a presence hint. Recent issue/project navigation
-       *  lives in the input action row; it is not message/session state.
-       *
-       *  We key off `noAgent` (the resolved-empty state) rather than
-       *  `!activeAgent`, so the loading window between mount and the
-       *  first agent-list response stays banner-free. */}
       {noAgent ? (
         <NoAgentBanner />
       ) : (
         <OfflineBanner agentName={activeAgent?.name} availability={availability} />
       )}
 
-      {/* Input — disabled for legacy archived sessions; locked out entirely
-       *  when there's no agent (the EmptyState above carries the CTA). */}
       <ChatInput
         onSend={handleSend}
         restoreDraftRequest={restoreDraftRequest}
@@ -809,6 +785,37 @@ export function ChatWindow() {
         }
         contextItems={contextItems}
       />
+    </>
+  );
+
+  if (isPage) {
+    return (
+      <div ref={windowRef} className={containerClass} style={containerStyle}>
+        {chatContent}
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      ref={windowRef}
+      className={containerClass}
+      style={containerStyle}
+      initial={{ opacity: 0, scale: 0.95, width: renderWidth, height: renderHeight }}
+      animate={{
+        opacity: isVisible ? 1 : 0,
+        scale: isVisible ? 1 : 0.95,
+        width: renderWidth,
+        height: renderHeight,
+      }}
+      transition={{
+        width: isDragging ? { duration: 0 } : { type: "spring", duration: 0.3, bounce: 0 },
+        height: isDragging ? { duration: 0 } : { type: "spring", duration: 0.3, bounce: 0 },
+        opacity: { duration: 0.15 },
+        scale: { type: "spring", duration: 0.2, bounce: 0 },
+      }}
+    >
+      {chatContent}
     </motion.div>
   );
 }
